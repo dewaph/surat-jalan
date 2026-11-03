@@ -319,7 +319,7 @@ var baseTitle=document.title;
 function isNewDoc(d){return !d.dibaca}
 function drawNotif(){
  var bell=$('#bell'),bb=$('#bb');
- if(!db){bell.style.display='none';closeNP();document.title=baseTitle;return}
+ if(!db||!isAdmin){bell.style.display='none';closeNP();document.title=baseTitle;return}
  var n=HIST.filter(isNewDoc).length;
  bell.style.display='';bb.style.display=n?'':'none';bb.textContent=n>99?'99+':n;
  document.title=(n?'('+n+') ':'')+baseTitle;
@@ -333,7 +333,6 @@ function drawNP(){
   b.style.cssText='display:block;width:100%;text-align:left;margin-top:8px;font-weight:400;line-height:1.4;padding:10px 12px;white-space:pre-line;border-left:6px solid #2980b9';
   b.textContent='🆕 '+d.no+' — '+(d.pw||'tanpa pengawas')+' ('+fmtDate(d.dt)+')\nDibawa ke: '+(d.dk||'-')+'  |  SPK: '+(d.sp||'-');
   b.onclick=function(){closeNP();cur=d.no;curP=d.periode;setData(d);showEditor()};l.appendChild(b)});
- if(a.length&&!isAdmin)l.insertAdjacentHTML('beforeend','<p class="note">Login sebagai admin untuk menandai sudah dibaca.</p>');
  $('#npr').style.display=(a.length&&isAdmin)?'':'none';
  $('#npn').style.display=(isAdmin&&window.Notification&&Notification.permission==='default')?'':'none'}
 async function markAllRead(){
@@ -369,7 +368,7 @@ function drawHist(){
  h.forEach(function(d){
   if(d.periode!==last){last=d.periode;var t=document.createElement('div');t.className='note';t.style.cssText='font-weight:700;margin:16px 0 0;border-bottom:1px solid var(--mut);padding-bottom:4px';t.textContent=perLabel(d.periode)+' · '+cnt[d.periode]+' surat';box.appendChild(t)}
   var b=document.createElement('button');b.type='button';
-  var tx=(isNewDoc(d)?'🆕 BARU · ':'')+d.no+' — '+(d.pw||'tanpa pengawas')+' ('+fmtDate(d.dt)+')'+'\nSPK: '+(d.sp||'-')+'  |  Dari: '+(d.dr||'-')+'  |  Dibawa ke: '+(d.dk||'-')+'\n'+((d.items||[]).map(function(i){return (i.n||'').toUpperCase()+(i.q?' ('+i.q+(i.s?' '+i.s.toUpperCase():'')+')':'')}).filter(Boolean).join(', ')||'-');b.style.whiteSpace='pre-line';b.style.borderLeft='6px solid '+(d.printed?'#1f8a4c':'#e67e22');b.style.background=d.printed?'rgba(31,138,76,.15)':'rgba(230,126,34,.18)';hl(b,tx,q);
+  var tx=(isAdmin&&isNewDoc(d)?'🆕 BARU · ':'')+d.no+' — '+(d.pw||'tanpa pengawas')+' ('+fmtDate(d.dt)+')'+'\nSPK: '+(d.sp||'-')+'  |  Dari: '+(d.dr||'-')+'  |  Dibawa ke: '+(d.dk||'-')+'\n'+((d.items||[]).map(function(i){return (i.n||'').toUpperCase()+(i.q?' ('+i.q+(i.s?' '+i.s.toUpperCase():'')+')':'')}).filter(Boolean).join(', ')||'-');b.style.whiteSpace='pre-line';b.style.borderLeft='6px solid '+(d.printed?'#1f8a4c':'#e67e22');b.style.background=d.printed?'rgba(31,138,76,.15)':'rgba(230,126,34,.18)';hl(b,tx,q);
   b.onclick=function(){cur=d.no;curP=d.periode;setData(d);showEditor()};box.appendChild(b)});
 }
 function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
