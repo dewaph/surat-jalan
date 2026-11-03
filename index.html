@@ -148,10 +148,12 @@ mark{background:#ffe066;color:#000;border-radius:2px;padding:0 1px}
 <div id="dlg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;align-items:center;justify-content:center;padding:16px"><div style="background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:16px;width:100%;max-width:340px"><h2 id="dtl"></h2><label for="dp">Password</label><input id="dp" type="password" autocomplete="off"><div id="dp2w" style="display:none;margin-top:8px"><label for="dp2">Ulangi password</label><input id="dp2" type="password" autocomplete="off"></div><p class="note" id="derr" style="color:#c0392b;min-height:18px"></p><div class="row"><button class="p" id="dok" type="button">✅ OK</button><button class="gray" id="dcn" type="button">✖️ Batal</button></div></div></div>
 <div id="pr"><pre id="prp"></pre></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
 var $=function(s){return document.querySelector(s)};
 var F=['no','dt','nm','pt','dr','dk','sp','pw','gd','pk','pn','jd','pg','sd'];
 var JD='SURAT JALAN KELUAR BARANG - MANIKA STONE ART';
+var SB_URL='https://alnmjxyyfhkytwkwzpon.supabase.co',SB_KEY='sb_publishable_DaL5YRZ7cIVN52tEiz3REw_u2s9Pu2g';
 var S={get:function(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
 set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 
@@ -279,7 +281,7 @@ function askPass(title,twice){return new Promise(function(res){
  $('#dcn').onclick=function(){done(null)};
  $('#dok').onclick=function(){var a=$('#dp').value;if(!a){$('#derr').textContent='Password tidak boleh kosong.';return}if(twice&&a!==$('#dp2').value){$('#derr').textContent='Kedua password tidak sama.';return}done(a)};
 })}
-async function setPass(){var p=await askPass('Buat password admin',true);if(p===null)return;var h=await sha(p);await db.doc('config/admin').set({hash:h});ADM_HASH=h;setAdmin(h)}
+async function setPass(){var p=await askPass('Buat password admin',true);if(p===null)return;var h=await sha(p);var r=await db.from('sj_config').upsert({key:'admin',value:{hash:h}});if(r.error)throw r.error;ADM_HASH=h;setAdmin(h)}
 async function loginClick(){
  if(isAdmin){setAdmin(null);return}
  if(!db){alert('Database belum tersambung.');return}
@@ -289,12 +291,11 @@ async function loginClick(){
   var p=await askPass('Login admin',false);if(p===null)return;
   var h=await sha(p);
   if(h===ADM_HASH){setAdmin(h)}
-  else if(canSetup&&confirm('Password salah. Atur ulang password admin?')){await setPass()}
   else{alert('Password salah.')}
  }catch(e){alert('Gagal: '+((e&&e.message)||e))}
 }
 async function changePass(){if(!isAdmin||!db)return;try{await setPass()}catch(e){alert('Gagal: '+((e&&e.message)||e))}}
-function markPrinted(){if(db&&cur)db.collection('suratjalan').doc(cur).update({printed:true,printedAt:Date.now()}).catch(function(){})}
+function markPrinted(){if(db&&cur)db.from('suratjalan').update({printed:true,printed_at:Date.now()}).eq('no',cur).then(function(){loadHist().catch(function(){})},function(){})}
 function gdVis(){var s=$('#drs'),i=$('#dr');$('#gdw').style.display=(s.value==='PBM'||(s.value==='X'&&/\bPBM\b/i.test(i.value)))?'':'none'}
 function toast(t){var e=$('#toast');e.textContent=t;e.style.display='block'}
 function showHome(){$('#home').style.display='';$('#editor').style.display='none';drawHist();window.scrollTo(0,0)}
@@ -312,7 +313,7 @@ function hl(el,t,w){
   else if(p)el.appendChild(document.createTextNode(p))})}
 function drawHist(){
  var box=$('#hist');box.innerHTML='';
- if(!db){box.innerHTML='<p class="note">'+(dbState==='loading'?'Menyambungkan ke database...':'Database belum tersambung. Pastikan Anda sudah login dan diberi akses sebagai Contributor atau Editor.')+'</p>';return}
+ if(!db){box.innerHTML='<p class="note">'+(dbState==='loading'?'Menyambungkan ke database...':'Database belum tersambung. Cek koneksi internet lalu muat ulang halaman.')+'</p>';return}
  var h=HIST,q=($('#q').value||'').toLowerCase().split(/\s+/).filter(Boolean);
  if(!h.length){box.innerHTML='<p class="note">Belum ada surat jalan tersimpan.</p>';return}
  if(q.length)h=h.filter(function(d){var s=[d.no,d.pw,d.nm,d.pt,d.sp,d.dr,d.dk,d.dt,fmtDate(d.dt)].concat((d.items||[]).map(function(i){return i.n})).join(' ').toLowerCase();return q.every(function(w){return s.indexOf(w)>-1})});
@@ -322,18 +323,20 @@ function drawHist(){
   b.onclick=function(){cur=d.no;setData(d);showEditor()};box.appendChild(b)});
 }
 function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
-function taken(s){return s.exists&&s.data()&&s.data().no}
+var SEL='no,seq,doc,printed';
+function rowToDoc(r){var d=r.doc||{};d.no=r.no;d.seq=r.seq;d.printed=!!r.printed;return d}
+async function loadHist(){var r=await db.from('suratjalan').select(SEL).order('seq',{ascending:false}).limit(300);if(r.error)throw r.error;HIST=r.data.map(rowToDoc);drawHist()}
+async function loadCfg(){var r=await db.from('sj_config').select('key,value').in('key',['admin','counter']);if(r.error)return;
+ var a=null,st=1;r.data.forEach(function(x){if(x.key==='admin')a=(x.value&&x.value.hash)||null;if(x.key==='counter'){var v=Number(x.value&&x.value.start);st=v>0?v:1}});
+ ADM_HASH=a;START=st;var h='';try{h=localStorage.getItem('sj_adm')||''}catch(e){}setAdmin(h&&h===ADM_HASH?h:null)}
 async function claimNumber(data){
- var col=db.collection('suratjalan'),n=Math.max(HIST.length?(parseInt(HIST[0].no,10)||0)+1:1,START);
+ var n=Math.max(HIST.length?(parseInt(HIST[0].no,10)||0)+1:1,START);
  for(var t=0;t<80;t++){
-  var id=pad4(n),ref=col.doc(id),s=await ref.get();
-  if(taken(s)){n++;continue}
-  var r=await ref.acquire({holder:holder,ttlMs:1000});
-  if(!r.acquired){await sleep(1100);continue}
-  s=await ref.get();
-  if(taken(s)){n++;continue}
-  data.no=id;data.seq=n;data.createdAt=Date.now();
-  await ref.set(data);return id;
+  var id=pad4(n);
+  var r=await db.from('suratjalan').insert({no:id,seq:n,doc:data,created_at:Date.now()});
+  if(!r.error){data.no=id;return id}
+  if(r.error.code==='23505'){n++;continue}
+  throw r.error;
  }
  throw new Error('Gagal mendapat nomor, coba lagi.')
 }
@@ -361,9 +364,9 @@ async function save(){
  saving=true;$('#save').disabled=true;
  try{
   var d=getData();
-  if(cur){d.no=cur;await db.collection('suratjalan').doc(cur).update(d)}
+  if(cur){d.no=cur;var u=await db.from('suratjalan').update({doc:d}).eq('no',cur);if(u.error)throw u.error}
   else{cur=await claimNumber(d)}
-  $('#no').value=cur;render();return true;
+  $('#no').value=cur;render();loadHist().catch(function(){});return true;
  }catch(e){alert('Gagal menyimpan: '+((e&&e.message)||e));return false}
  finally{saving=false;$('#save').disabled=false}
 }
@@ -389,7 +392,7 @@ $('#lg').onclick=loginClick;$('#pwb').onclick=changePass;$('#tm').onclick=toggle
 $('#q').addEventListener('input',drawHist);
 
 
-var pg0=S.get('sj2_pg','66')||'66';
+var pg0=S.get('sj2_pg','28')||'28';
 var d0=S.get('sj2_draft',null);
 $('#pg').value=pg0;
 if(d0){setData(d0)}else{itemRow();render()}
@@ -397,17 +400,18 @@ if(!$('#dt').value)$('#dt').value=today();
 
 if(!$('#jd').value)$('#jd').value=JD;
 (function(){
+ canSetup=true;
  var t=setTimeout(function(){if(!db){dbState='failed';drawHist()}},10000);
- if(!window.claude||!claude.use){clearTimeout(t);dbState='failed';drawHist();return}
- claude.use('user').then(function(u){canSetup=!!(u&&u.canEdit&&u.canEdit())}).catch(function(){});
- claude.use('db').then(function(x){
-  clearTimeout(t);
-  if(!x){dbState='failed';drawHist();return}
-  db=x;dbState='ok';
-  db.doc('config/admin').onSnapshot(function(s){ADM_HASH=(s.exists&&s.data())?(s.data().hash||null):null;var st='';try{st=localStorage.getItem('sj_adm')||''}catch(e){}setAdmin(st&&st===ADM_HASH?st:null)},function(){});
-  db.collection('suratjalan').orderBy('seq','desc').limit(300).onSnapshot(function(s){HIST=s.docs.map(function(d){return d.data()});drawHist()},function(){dbState='failed';db=null;drawHist()});
-  db.doc('config/counter').onSnapshot(function(s){var v=s.exists&&s.data()?Number(s.data().start):1;START=v>0?v:1},function(){});
- });
+ if(!window.supabase||!SB_URL||SB_URL.indexOf('YOUR-')>-1){clearTimeout(t);dbState='failed';drawHist();return}
+ var c=window.supabase.createClient(SB_URL,SB_KEY);
+ db=c;
+ loadHist().then(function(){
+  clearTimeout(t);dbState='ok';loadCfg();
+  c.channel('sj-live')
+   .on('postgres_changes',{event:'*',schema:'public',table:'suratjalan'},function(){loadHist().catch(function(){})})
+   .on('postgres_changes',{event:'*',schema:'public',table:'sj_config'},function(){loadCfg()})
+   .subscribe();
+ }).catch(function(){clearTimeout(t);db=null;dbState='failed';drawHist()});
 })();
 initIcons();initTheme();applyRole();loadDr();render();drawHist();showHome();
 </script>
