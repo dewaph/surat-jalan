@@ -67,14 +67,13 @@ mark{background:#ffe066;color:#000;border-radius:2px;padding:0 1px}
 </head>
 <body>
 <main>
-<div style="display:flex;align-items:center;gap:8px"><h1 style="font-size:19px;flex:1;min-width:0">Surat jalan keluar barang</h1><div style="display:flex;gap:6px;margin-left:auto;flex:none"><button id="tm" type="button" style="padding:7px 11px;border-radius:999px"></button><button id="pwb" class="teal" type="button" style="display:none;padding:7px 14px;font-size:13px;white-space:nowrap;border-radius:999px">🔒 Ganti password</button><button id="lg" class="lg" type="button" style="padding:7px 16px;font-size:13px;white-space:nowrap;border-radius:999px">🔑 Login</button></div></div>
+<div style="display:flex;align-items:center;gap:8px"><h1 style="font-size:19px;flex:1;min-width:0">Surat jalan keluar barang</h1><div style="display:flex;gap:6px;margin-left:auto;flex:none"><button id="bell" type="button" aria-label="Notifikasi" style="display:none;position:relative;padding:7px 11px;border-radius:999px">🔔<span id="bb" style="display:none;position:absolute;top:-6px;right:-4px;min-width:18px;height:18px;line-height:18px;border-radius:9px;background:#c0392b;color:#fff;font-size:11px;font-weight:700;text-align:center;padding:0 4px"></span></button><button id="tm" type="button" style="padding:7px 11px;border-radius:999px"></button><button id="pwb" class="teal" type="button" style="display:none;padding:7px 14px;font-size:13px;white-space:nowrap;border-radius:999px">🔒 Ganti password</button><button id="lg" class="lg" type="button" style="padding:7px 16px;font-size:13px;white-space:nowrap;border-radius:999px">🔑 Login</button></div></div>
 
 
 <div id="home">
 <section>
 <h2>Daftar Surat Jalan</h2>
 <p id="toast" class="note" style="display:none;color:#1f8a4c;font-weight:600;margin:0 0 10px"></p>
-<div id="nb" style="display:none;margin:0 0 10px;padding:10px 12px;border-radius:10px;background:rgba(41,128,185,.18);border-left:6px solid #2980b9"><div id="nbt" style="font-weight:600"></div><div class="row" style="margin:8px 0 0"><button id="nbr" type="button" style="display:none">✔️ Tandai sudah dibaca</button><button id="nbn" type="button" style="display:none">🔔 Aktifkan notifikasi</button></div></div>
 <div class="row" style="margin:0 0 6px"><button class="p" id="newbtn" type="button">📝 Buat surat jalan baru</button></div>
 
 <div style="display:flex;gap:8px;margin:4px 0 8px"><select id="fm" aria-label="Filter bulan" style="flex:1"></select><select id="fy" aria-label="Filter tahun" style="flex:1"></select></div>
@@ -147,6 +146,7 @@ mark{background:#ffe066;color:#000;border-radius:2px;padding:0 1px}
 </section>
 </div>
 </main>
+<div id="npw" style="display:none;position:fixed;inset:0;z-index:40"><div id="np" style="position:absolute;top:calc(env(safe-area-inset-top,0px) + 56px);right:12px;left:12px;max-width:420px;margin-left:auto;max-height:70vh;overflow:auto;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:0 8px 24px rgba(0,0,0,.3)"><div style="display:flex;align-items:center"><strong style="flex:1">🔔 Notifikasi</strong><button id="npx" type="button" aria-label="Tutup" style="padding:4px 10px">✕</button></div><div id="npl"></div><div class="row" style="margin:10px 0 0"><button id="npr" type="button" style="display:none">✔️ Tandai semua dibaca</button><button id="npn" type="button" style="display:none">🔔 Aktifkan notifikasi</button></div></div></div>
 <div id="dlg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;align-items:center;justify-content:center;padding:16px"><div style="background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:16px;width:100%;max-width:340px"><h2 id="dtl"></h2><label for="dp">Password</label><input id="dp" type="password" autocomplete="off"><div id="dp2w" style="display:none;margin-top:8px"><label for="dp2">Ulangi password</label><input id="dp2" type="password" autocomplete="off"></div><p class="note" id="derr" style="color:#c0392b;min-height:18px"></p><div class="row"><button class="p" id="dok" type="button">✅ OK</button><button class="gray" id="dcn" type="button">✖️ Batal</button></div></div></div>
 <div id="pr"><pre id="prp"></pre></div>
 
@@ -325,13 +325,23 @@ function saveSeen(t){SEEN=t;try{localStorage.setItem('sj_seen',String(t))}catch(
 (function(){var v=null;try{v=localStorage.getItem('sj_seen')}catch(e){}if(v===null)saveSeen(Date.now());else SEEN=Number(v)||0})();
 function isNewDoc(d){return isAdmin&&d.created_at>SEEN&&!OWN[d.periode+'|'+d.no]}
 function drawNotif(){
- var nb=$('#nb');
- if(!isAdmin||!db){nb.style.display='none';document.title=baseTitle;return}
- var n=HIST.filter(isNewDoc).length,canN=!!window.Notification&&Notification.permission==='default';
- $('#nbr').style.display=n?'':'none';$('#nbn').style.display=canN?'':'none';
- if(!n&&!canN){nb.style.display='none'}
- else{nb.style.display='';$('#nbt').textContent=n?'🔔 '+n+' surat jalan baru masuk':'Aktifkan notifikasi untuk diberi tahu saat ada surat jalan baru.'}
- document.title=(n?'('+n+') ':'')+baseTitle}
+ var bell=$('#bell'),bb=$('#bb');
+ if(!isAdmin||!db){bell.style.display='none';closeNP();document.title=baseTitle;return}
+ var n=HIST.filter(isNewDoc).length;
+ bell.style.display='';bb.style.display=n?'':'none';bb.textContent=n>99?'99+':n;
+ document.title=(n?'('+n+') ':'')+baseTitle;
+ if($('#npw').style.display==='block')drawNP()}
+function openNP(){$('#npw').style.display='block';drawNP()}
+function closeNP(){$('#npw').style.display='none'}
+function drawNP(){
+ var l=$('#npl');l.innerHTML='';var a=HIST.filter(isNewDoc);
+ if(!a.length)l.innerHTML='<p class="note">Tidak ada surat jalan baru.</p>';
+ a.forEach(function(d){var b=document.createElement('button');b.type='button';
+  b.style.cssText='display:block;width:100%;text-align:left;margin-top:8px;font-weight:400;line-height:1.4;padding:10px 12px;white-space:pre-line;border-left:6px solid #2980b9';
+  b.textContent='🆕 '+d.no+' — '+(d.pw||'tanpa pengawas')+' ('+fmtDate(d.dt)+')\nDibawa ke: '+(d.dk||'-')+'  |  SPK: '+(d.sp||'-');
+  b.onclick=function(){closeNP();cur=d.no;curP=d.periode;setData(d);showEditor()};l.appendChild(b)});
+ $('#npr').style.display=a.length?'':'none';
+ $('#npn').style.display=(window.Notification&&Notification.permission==='default')?'':'none'}
 function beep(){try{var c=new (window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.value=.15;o.start();setTimeout(function(){o.stop();c.close()},350)}catch(e){}}
 function alertNew(r){
  var d=r.doc||{},t='Surat jalan baru no. '+r.no+(d.pw?' — '+d.pw:'');
@@ -435,8 +445,11 @@ $('#save').onclick=function(){save().then(function(ok){if(ok){var n=cur;showHome
 $('#newbtn').onclick=fresh;$('#back').onclick=showHome;
 $('#lg').onclick=loginClick;$('#pwb').onclick=changePass;$('#tm').onclick=toggleTheme;
 $('#q').addEventListener('input',drawHist);
-$('#nbr').onclick=function(){saveSeen(Date.now());drawHist()};
-$('#nbn').onclick=function(){try{Notification.requestPermission().then(drawNotif)}catch(e){}};
+$('#bell').onclick=openNP;$('#npx').onclick=closeNP;
+$('#npw').onclick=function(e){if(e.target===this)closeNP()};
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeNP()});
+$('#npr').onclick=function(){saveSeen(Date.now());drawHist()};
+$('#npn').onclick=function(){try{Notification.requestPermission().then(drawNP)}catch(e){}};
 $('#fy').addEventListener('change',function(){FY=this.value;drawHist()});
 $('#fm').addEventListener('change',function(){FM=this.value;drawHist()});
 
