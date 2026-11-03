@@ -67,7 +67,7 @@ mark{background:#ffe066;color:#000;border-radius:2px;padding:0 1px}
 </head>
 <body>
 <main>
-<div style="display:flex;align-items:center;gap:8px"><h1 style="font-size:19px;flex:1;min-width:0">Surat jalan keluar barang</h1><div style="display:flex;gap:6px;margin-left:auto;flex:none"><button id="bell" type="button" aria-label="Notifikasi" style="display:none;position:relative;padding:7px 11px;border-radius:999px">🔔<span id="bb" style="display:none;position:absolute;top:-6px;right:-4px;min-width:18px;height:18px;line-height:18px;border-radius:9px;background:#c0392b;color:#fff;font-size:11px;font-weight:700;text-align:center;padding:0 4px"></span></button><button id="tm" type="button" style="padding:7px 11px;border-radius:999px"></button><button id="pwb" class="teal" type="button" style="display:none;padding:7px 14px;font-size:13px;white-space:nowrap;border-radius:999px">🔒 Ganti password</button><button id="lg" class="lg" type="button" style="padding:7px 16px;font-size:13px;white-space:nowrap;border-radius:999px">🔑 Login</button></div></div>
+<div style="display:flex;align-items:center;gap:8px"><h1 style="font-size:19px;flex:1;min-width:0">Surat jalan keluar barang</h1><div style="display:flex;gap:6px;margin-left:auto;flex:none"><button id="bell" type="button" aria-label="Notifikasi" style="display:none;position:relative;padding:7px 11px;border-radius:999px">🔔<span id="bb" style="display:none;position:absolute;top:-6px;right:-4px;min-width:18px;height:18px;line-height:18px;border-radius:9px;background:#c0392b;color:#fff;font-size:11px;font-weight:700;text-align:center;padding:0 4px"></span></button><button id="tm" type="button" style="padding:7px 11px;border-radius:999px"></button><button id="lg" class="lg" type="button" style="padding:7px 16px;font-size:13px;white-space:nowrap;border-radius:999px">🔑 Login</button></div></div>
 
 
 <div id="home">
@@ -265,7 +265,7 @@ function curTheme(){var t=document.documentElement.getAttribute('data-theme');re
 function updTm(){var t=curTheme();$('#tm').innerHTML=ico(t==='dark'?'sun':'moon');$('#tm').setAttribute('aria-label',t==='dark'?'Pakai mode terang':'Pakai mode gelap')}
 function toggleTheme(){var t=curTheme()==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('sj_theme',t)}catch(e){}updTm()}
 function initTheme(){try{var st=localStorage.getItem('sj_theme');if(st)document.documentElement.setAttribute('data-theme',st)}catch(e){}updTm()}
-function initIcons(){setBtn('pwb','lock','Ganti password');setBtn('newbtn','doc','Buat surat jalan baru');setBtn('back','back','Kembali ke daftar');setBtn('add','plus','Tambah barang');setBtn('del','minus','Hapus barang');setBtn('save','save','Simpan surat jalan ini');setBtn('usb','print','Cetak langsung via USB');setBtn('prt','globe','Cetak lewat browser');setBtn('dok','check','OK');setBtn('dcn','x','Batal')}
+function initIcons(){setBtn('newbtn','doc','Buat surat jalan baru');setBtn('back','back','Kembali ke daftar');setBtn('add','plus','Tambah barang');setBtn('del','minus','Hapus barang');setBtn('save','save','Simpan surat jalan ini');setBtn('usb','print','Cetak langsung via USB');setBtn('prt','globe','Cetak lewat browser');setBtn('dok','check','OK');setBtn('dcn','x','Batal')}
 var isAdmin=false,ADM_HASH=null,canSetup=false;
 function applyLock(){var lock=!!cur&&!isAdmin;
  document.querySelectorAll('#editor input,#editor select').forEach(function(e){e.disabled=lock});
@@ -274,7 +274,7 @@ function applyLock(){var lock=!!cur&&!isAdmin;
  document.querySelectorAll('#editor details').forEach(function(d){d.style.display=lock?'none':''});
 
  $('#locknote').style.display=lock?'block':'none'}
-function applyRole(){var on=isAdmin;$('#usb').style.display=$('#prt').style.display=on?'':'none';setBtn('lg',on?'out':'key',on?'Keluar':'Login');$('#pwb').style.display=on?'':'none';applyLock();drawHist()}
+function applyRole(){var on=isAdmin;$('#usb').style.display=$('#prt').style.display=on?'':'none';setBtn('lg',on?'out':'key',on?'Keluar':'Login');applyLock();drawHist()}
 function setAdmin(h){isAdmin=!!h;try{if(h)localStorage.setItem('sj_adm',h);else localStorage.removeItem('sj_adm')}catch(e){}applyRole()}
 function sha(s){return crypto.subtle.digest('SHA-256',new TextEncoder().encode('sj-v1:'+s)).then(function(b){return Array.prototype.map.call(new Uint8Array(b),function(x){return('0'+x.toString(16)).slice(-2)}).join('')})}
 function askPass(title,twice){return new Promise(function(res){
@@ -296,7 +296,6 @@ async function loginClick(){
   else{alert('Password salah.')}
  }catch(e){alert('Gagal: '+((e&&e.message)||e))}
 }
-async function changePass(){if(!isAdmin||!db)return;try{await setPass()}catch(e){alert('Gagal: '+((e&&e.message)||e))}}
 function markPrinted(){if(db&&cur)db.from('suratjalan').update({printed:true,printed_at:Date.now()}).eq('no',cur).eq('periode',curP).then(function(){loadHist().catch(function(){})},function(){})}
 function gdVis(){var s=$('#drs'),i=$('#dr');$('#gdw').style.display=(s.value==='PBM'||(s.value==='X'&&/\bPBM\b/i.test(i.value)))?'':'none'}
 function toast(t){var e=$('#toast');e.textContent=t;e.style.display='block'}
@@ -316,17 +315,11 @@ function hl(el,t,w){
  t.split(re).forEach(function(p,i){
   if(i%2){var m=document.createElement('mark');m.textContent=p;el.appendChild(m)}
   else if(p)el.appendChild(document.createTextNode(p))})}
-var baseTitle=document.title,SEEN=0,OWN={};
-try{OWN=JSON.parse(localStorage.getItem('sj_own')||'{}')}catch(e){}
-function saveOwn(){try{localStorage.setItem('sj_own',JSON.stringify(OWN))}catch(e){}}
-function markOwn(k){OWN[k]=1;var ks=Object.keys(OWN);if(ks.length>300)delete OWN[ks[0]];saveOwn()}
-function unOwn(k){delete OWN[k];saveOwn()}
-function saveSeen(t){SEEN=t;try{localStorage.setItem('sj_seen',String(t))}catch(e){}}
-(function(){var v=null;try{v=localStorage.getItem('sj_seen')}catch(e){}if(v===null)saveSeen(Date.now());else SEEN=Number(v)||0})();
-function isNewDoc(d){return isAdmin&&d.created_at>SEEN&&!OWN[d.periode+'|'+d.no]}
+var baseTitle=document.title;
+function isNewDoc(d){return !d.dibaca}
 function drawNotif(){
  var bell=$('#bell'),bb=$('#bb');
- if(!isAdmin||!db){bell.style.display='none';closeNP();document.title=baseTitle;return}
+ if(!db){bell.style.display='none';closeNP();document.title=baseTitle;return}
  var n=HIST.filter(isNewDoc).length;
  bell.style.display='';bb.style.display=n?'':'none';bb.textContent=n>99?'99+':n;
  document.title=(n?'('+n+') ':'')+baseTitle;
@@ -340,8 +333,14 @@ function drawNP(){
   b.style.cssText='display:block;width:100%;text-align:left;margin-top:8px;font-weight:400;line-height:1.4;padding:10px 12px;white-space:pre-line;border-left:6px solid #2980b9';
   b.textContent='🆕 '+d.no+' — '+(d.pw||'tanpa pengawas')+' ('+fmtDate(d.dt)+')\nDibawa ke: '+(d.dk||'-')+'  |  SPK: '+(d.sp||'-');
   b.onclick=function(){closeNP();cur=d.no;curP=d.periode;setData(d);showEditor()};l.appendChild(b)});
- $('#npr').style.display=a.length?'':'none';
- $('#npn').style.display=(window.Notification&&Notification.permission==='default')?'':'none'}
+ if(a.length&&!isAdmin)l.insertAdjacentHTML('beforeend','<p class="note">Login sebagai admin untuk menandai sudah dibaca.</p>');
+ $('#npr').style.display=(a.length&&isAdmin)?'':'none';
+ $('#npn').style.display=(isAdmin&&window.Notification&&Notification.permission==='default')?'':'none'}
+async function markAllRead(){
+ if(!isAdmin||!db)return;
+ var r=await db.from('suratjalan').update({dibaca:true}).eq('dibaca',false);
+ if(r.error){alert('Gagal menandai dibaca: '+r.error.message);return}
+ await loadHist()}
 function beep(){try{var c=new (window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.value=.15;o.start();setTimeout(function(){o.stop();c.close()},350)}catch(e){}}
 function alertNew(r){
  var d=r.doc||{},t='Surat jalan baru no. '+r.no+(d.pw?' — '+d.pw:'');
@@ -374,8 +373,8 @@ function drawHist(){
   b.onclick=function(){cur=d.no;curP=d.periode;setData(d);showEditor()};box.appendChild(b)});
 }
 function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
-var SEL='periode,no,seq,doc,printed,created_at';
-function rowToDoc(r){var d=r.doc||{};d.no=r.no;d.periode=r.periode;d.seq=r.seq;d.created_at=Number(r.created_at)||0;d.printed=!!r.printed;return d}
+var SEL='periode,no,seq,doc,printed,created_at,dibaca';
+function rowToDoc(r){var d=r.doc||{};d.no=r.no;d.periode=r.periode;d.seq=r.seq;d.dibaca=!!r.dibaca;d.created_at=Number(r.created_at)||0;d.printed=!!r.printed;return d}
 async function loadHist(){var r=await db.from('suratjalan').select(SEL).order('periode',{ascending:false}).order('seq',{ascending:false}).limit(1000);if(r.error)throw r.error;HIST=r.data.map(rowToDoc);drawHist()}
 async function loadCfg(){var r=await db.from('sj_config').select('key,value').in('key',['admin','counter']);if(r.error)return;
  var a=null,st=1;r.data.forEach(function(x){if(x.key==='admin')a=(x.value&&x.value.hash)||null;if(x.key==='counter'){var v=Number(x.value&&x.value.start);st=v>0?v:1}});
@@ -386,10 +385,9 @@ async function claimNumber(data){
  if(q.error)throw q.error;
  var n=q.data.length?q.data[0].seq+1:1;
  for(var t=0;t<80;t++){
-  var id=pad4(n);markOwn(p+'|'+id);
-  var r=await db.from('suratjalan').insert({periode:p,no:id,seq:n,doc:data,created_at:Date.now()});
+  var id=pad4(n);
+  var r=await db.from('suratjalan').insert({periode:p,no:id,seq:n,doc:data,created_at:Date.now(),dibaca:!!isAdmin});
   if(!r.error){data.no=id;curP=p;if(FY&&FY!==p.slice(0,4))FY=p.slice(0,4);if(FM&&FM!==p.slice(5,7))FM=p.slice(5,7);return id}
-  unOwn(p+'|'+id);
   if(r.error.code==='23505'){n++;continue}
   throw r.error;
  }
@@ -443,12 +441,12 @@ $('#usb').onclick=function(){if(!isAdmin)return;save().then(function(ok){if(ok)u
 $('#prt').onclick=function(){if(!isAdmin)return;save().then(function(ok){if(ok){render();window.print();markPrinted()}})};
 $('#save').onclick=function(){save().then(function(ok){if(ok){var n=cur;showHome();toast('Tersimpan: surat jalan no. '+n+'.')}})};
 $('#newbtn').onclick=fresh;$('#back').onclick=showHome;
-$('#lg').onclick=loginClick;$('#pwb').onclick=changePass;$('#tm').onclick=toggleTheme;
+$('#lg').onclick=loginClick;$('#tm').onclick=toggleTheme;
 $('#q').addEventListener('input',drawHist);
 $('#bell').onclick=openNP;$('#npx').onclick=closeNP;
 $('#npw').onclick=function(e){if(e.target===this)closeNP()};
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeNP()});
-$('#npr').onclick=function(){saveSeen(Date.now());drawHist()};
+$('#npr').onclick=function(){markAllRead().catch(function(e){alert('Gagal: '+((e&&e.message)||e))})};
 $('#npn').onclick=function(){try{Notification.requestPermission().then(drawNP)}catch(e){}};
 $('#fy').addEventListener('change',function(){FY=this.value;drawHist()});
 $('#fm').addEventListener('change',function(){FM=this.value;drawHist()});
@@ -470,7 +468,7 @@ if(!$('#jd').value)$('#jd').value=JD;
  loadHist().then(function(){
   clearTimeout(t);dbState='ok';loadCfg();
   c.channel('sj-live')
-   .on('postgres_changes',{event:'*',schema:'public',table:'suratjalan'},function(p){loadHist().then(function(){if(p.eventType==='INSERT'&&isAdmin&&p.new&&!OWN[p.new.periode+'|'+p.new.no])alertNew(p.new)}).catch(function(){})})
+   .on('postgres_changes',{event:'*',schema:'public',table:'suratjalan'},function(p){loadHist().then(function(){if(p.eventType==='INSERT'&&isAdmin&&p.new&&!p.new.dibaca)alertNew(p.new)}).catch(function(){})})
    .on('postgres_changes',{event:'*',schema:'public',table:'sj_config'},function(){loadCfg()})
    .subscribe();
  }).catch(function(){clearTimeout(t);db=null;dbState='failed';drawHist()});
