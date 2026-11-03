@@ -74,6 +74,7 @@ mark{background:#ffe066;color:#000;border-radius:2px;padding:0 1px}
 <section>
 <h2>Daftar Surat Jalan</h2>
 <p id="toast" class="note" style="display:none;color:#1f8a4c;font-weight:600;margin:0 0 10px"></p>
+<div id="nb" style="display:none;margin:0 0 10px;padding:10px 12px;border-radius:10px;background:rgba(41,128,185,.18);border-left:6px solid #2980b9"><div id="nbt" style="font-weight:600"></div><div class="row" style="margin:8px 0 0"><button id="nbr" type="button" style="display:none">✔️ Tandai sudah dibaca</button><button id="nbn" type="button" style="display:none">🔔 Aktifkan notifikasi</button></div></div>
 <div class="row" style="margin:0 0 6px"><button class="p" id="newbtn" type="button">📝 Buat surat jalan baru</button></div>
 
 <div style="display:flex;gap:8px;margin:4px 0 8px"><select id="fm" aria-label="Filter bulan" style="flex:1"></select><select id="fy" aria-label="Filter tahun" style="flex:1"></select></div>
@@ -273,7 +274,7 @@ function applyLock(){var lock=!!cur&&!isAdmin;
  document.querySelectorAll('#editor details').forEach(function(d){d.style.display=lock?'none':''});
 
  $('#locknote').style.display=lock?'block':'none'}
-function applyRole(){var on=isAdmin;$('#usb').style.display=$('#prt').style.display=on?'':'none';setBtn('lg',on?'out':'key',on?'Keluar':'Login');$('#pwb').style.display=on?'':'none';applyLock()}
+function applyRole(){var on=isAdmin;$('#usb').style.display=$('#prt').style.display=on?'':'none';setBtn('lg',on?'out':'key',on?'Keluar':'Login');$('#pwb').style.display=on?'':'none';applyLock();drawHist()}
 function setAdmin(h){isAdmin=!!h;try{if(h)localStorage.setItem('sj_adm',h);else localStorage.removeItem('sj_adm')}catch(e){}applyRole()}
 function sha(s){return crypto.subtle.digest('SHA-256',new TextEncoder().encode('sj-v1:'+s)).then(function(b){return Array.prototype.map.call(new Uint8Array(b),function(x){return('0'+x.toString(16)).slice(-2)}).join('')})}
 function askPass(title,twice){return new Promise(function(res){
@@ -315,6 +316,27 @@ function hl(el,t,w){
  t.split(re).forEach(function(p,i){
   if(i%2){var m=document.createElement('mark');m.textContent=p;el.appendChild(m)}
   else if(p)el.appendChild(document.createTextNode(p))})}
+var baseTitle=document.title,SEEN=0,OWN={};
+try{OWN=JSON.parse(localStorage.getItem('sj_own')||'{}')}catch(e){}
+function saveOwn(){try{localStorage.setItem('sj_own',JSON.stringify(OWN))}catch(e){}}
+function markOwn(k){OWN[k]=1;var ks=Object.keys(OWN);if(ks.length>300)delete OWN[ks[0]];saveOwn()}
+function unOwn(k){delete OWN[k];saveOwn()}
+function saveSeen(t){SEEN=t;try{localStorage.setItem('sj_seen',String(t))}catch(e){}}
+(function(){var v=null;try{v=localStorage.getItem('sj_seen')}catch(e){}if(v===null)saveSeen(Date.now());else SEEN=Number(v)||0})();
+function isNewDoc(d){return isAdmin&&d.created_at>SEEN&&!OWN[d.periode+'|'+d.no]}
+function drawNotif(){
+ var nb=$('#nb');
+ if(!isAdmin||!db){nb.style.display='none';document.title=baseTitle;return}
+ var n=HIST.filter(isNewDoc).length,canN=!!window.Notification&&Notification.permission==='default';
+ $('#nbr').style.display=n?'':'none';$('#nbn').style.display=canN?'':'none';
+ if(!n&&!canN){nb.style.display='none'}
+ else{nb.style.display='';$('#nbt').textContent=n?'🔔 '+n+' surat jalan baru masuk':'Aktifkan notifikasi untuk diberi tahu saat ada surat jalan baru.'}
+ document.title=(n?'('+n+') ':'')+baseTitle}
+function beep(){try{var c=new (window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.value=.15;o.start();setTimeout(function(){o.stop();c.close()},350)}catch(e){}}
+function alertNew(r){
+ var d=r.doc||{},t='Surat jalan baru no. '+r.no+(d.pw?' — '+d.pw:'');
+ beep();try{if(navigator.vibrate)navigator.vibrate(200)}catch(e){}
+ try{if(window.Notification&&Notification.permission==='granted')new Notification('Surat Jalan Baru',{body:t})}catch(e){}}
 function drawFilter(){
  var ys={};ys[today().slice(0,4)]=1;if(FY)ys[FY]=1;HIST.forEach(function(d){ys[d.periode.slice(0,4)]=1});
  var fy=$('#fy'),fm=$('#fm'),o='<option value="">Semua tahun</option>';
@@ -324,6 +346,7 @@ function drawFilter(){
  BLN.forEach(function(n,i){m+='<option value="'+('0'+(i+1)).slice(-2)+'">'+n+'</option>'});
  fm.innerHTML=m;fm.value=FM}
 function drawHist(){
+ drawNotif();
  var box=$('#hist');box.innerHTML='';
  if(!db){box.innerHTML='<p class="note">'+(dbState==='loading'?'Menyambungkan ke database...':'Database belum tersambung. Cek koneksi internet lalu muat ulang halaman.')+'</p>';return}
  drawFilter();
@@ -337,12 +360,12 @@ function drawHist(){
  h.forEach(function(d){
   if(d.periode!==last){last=d.periode;var t=document.createElement('div');t.className='note';t.style.cssText='font-weight:700;margin:16px 0 0;border-bottom:1px solid var(--mut);padding-bottom:4px';t.textContent=perLabel(d.periode)+' · '+cnt[d.periode]+' surat';box.appendChild(t)}
   var b=document.createElement('button');b.type='button';
-  var tx=d.no+' — '+(d.pw||'tanpa pengawas')+' ('+fmtDate(d.dt)+')'+'\nSPK: '+(d.sp||'-')+'  |  Dari: '+(d.dr||'-')+'  |  Dibawa ke: '+(d.dk||'-')+'\n'+((d.items||[]).map(function(i){return (i.n||'').toUpperCase()+(i.q?' ('+i.q+(i.s?' '+i.s.toUpperCase():'')+')':'')}).filter(Boolean).join(', ')||'-');b.style.whiteSpace='pre-line';b.style.borderLeft='6px solid '+(d.printed?'#1f8a4c':'#e67e22');b.style.background=d.printed?'rgba(31,138,76,.15)':'rgba(230,126,34,.18)';hl(b,tx,q);
+  var tx=(isNewDoc(d)?'🆕 BARU · ':'')+d.no+' — '+(d.pw||'tanpa pengawas')+' ('+fmtDate(d.dt)+')'+'\nSPK: '+(d.sp||'-')+'  |  Dari: '+(d.dr||'-')+'  |  Dibawa ke: '+(d.dk||'-')+'\n'+((d.items||[]).map(function(i){return (i.n||'').toUpperCase()+(i.q?' ('+i.q+(i.s?' '+i.s.toUpperCase():'')+')':'')}).filter(Boolean).join(', ')||'-');b.style.whiteSpace='pre-line';b.style.borderLeft='6px solid '+(d.printed?'#1f8a4c':'#e67e22');b.style.background=d.printed?'rgba(31,138,76,.15)':'rgba(230,126,34,.18)';hl(b,tx,q);
   b.onclick=function(){cur=d.no;curP=d.periode;setData(d);showEditor()};box.appendChild(b)});
 }
 function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
-var SEL='periode,no,seq,doc,printed';
-function rowToDoc(r){var d=r.doc||{};d.no=r.no;d.periode=r.periode;d.seq=r.seq;d.printed=!!r.printed;return d}
+var SEL='periode,no,seq,doc,printed,created_at';
+function rowToDoc(r){var d=r.doc||{};d.no=r.no;d.periode=r.periode;d.seq=r.seq;d.created_at=Number(r.created_at)||0;d.printed=!!r.printed;return d}
 async function loadHist(){var r=await db.from('suratjalan').select(SEL).order('periode',{ascending:false}).order('seq',{ascending:false}).limit(1000);if(r.error)throw r.error;HIST=r.data.map(rowToDoc);drawHist()}
 async function loadCfg(){var r=await db.from('sj_config').select('key,value').in('key',['admin','counter']);if(r.error)return;
  var a=null,st=1;r.data.forEach(function(x){if(x.key==='admin')a=(x.value&&x.value.hash)||null;if(x.key==='counter'){var v=Number(x.value&&x.value.start);st=v>0?v:1}});
@@ -353,9 +376,10 @@ async function claimNumber(data){
  if(q.error)throw q.error;
  var n=q.data.length?q.data[0].seq+1:1;
  for(var t=0;t<80;t++){
-  var id=pad4(n);
+  var id=pad4(n);markOwn(p+'|'+id);
   var r=await db.from('suratjalan').insert({periode:p,no:id,seq:n,doc:data,created_at:Date.now()});
   if(!r.error){data.no=id;curP=p;if(FY&&FY!==p.slice(0,4))FY=p.slice(0,4);if(FM&&FM!==p.slice(5,7))FM=p.slice(5,7);return id}
+  unOwn(p+'|'+id);
   if(r.error.code==='23505'){n++;continue}
   throw r.error;
  }
@@ -411,6 +435,8 @@ $('#save').onclick=function(){save().then(function(ok){if(ok){var n=cur;showHome
 $('#newbtn').onclick=fresh;$('#back').onclick=showHome;
 $('#lg').onclick=loginClick;$('#pwb').onclick=changePass;$('#tm').onclick=toggleTheme;
 $('#q').addEventListener('input',drawHist);
+$('#nbr').onclick=function(){saveSeen(Date.now());drawHist()};
+$('#nbn').onclick=function(){try{Notification.requestPermission().then(drawNotif)}catch(e){}};
 $('#fy').addEventListener('change',function(){FY=this.value;drawHist()});
 $('#fm').addEventListener('change',function(){FM=this.value;drawHist()});
 
@@ -431,7 +457,7 @@ if(!$('#jd').value)$('#jd').value=JD;
  loadHist().then(function(){
   clearTimeout(t);dbState='ok';loadCfg();
   c.channel('sj-live')
-   .on('postgres_changes',{event:'*',schema:'public',table:'suratjalan'},function(){loadHist().catch(function(){})})
+   .on('postgres_changes',{event:'*',schema:'public',table:'suratjalan'},function(p){loadHist().then(function(){if(p.eventType==='INSERT'&&isAdmin&&p.new&&!OWN[p.new.periode+'|'+p.new.no])alertNew(p.new)}).catch(function(){})})
    .on('postgres_changes',{event:'*',schema:'public',table:'sj_config'},function(){loadCfg()})
    .subscribe();
  }).catch(function(){clearTimeout(t);db=null;dbState='failed';drawHist()});
