@@ -72,17 +72,18 @@ mark{background:#ffe066;color:#000;border-radius:2px;padding:0 1px}
 
 <div id="home">
 <section>
-<h2>Riwayat surat jalan</h2>
+<h2>Daftar Surat Jalan</h2>
 <p id="toast" class="note" style="display:none;color:#1f8a4c;font-weight:600;margin:0 0 10px"></p>
 <div class="row" style="margin:0 0 6px"><button class="p" id="newbtn" type="button">📝 Buat surat jalan baru</button></div>
 
-<input id="q" type="search" placeholder="Cari surat jalan" aria-label="Cari surat jalan" style="margin:4px 0 8px">
+<div style="display:flex;gap:8px;margin:4px 0 8px"><select id="fm" aria-label="Filter bulan" style="flex:1"></select><select id="fy" aria-label="Filter tahun" style="flex:1"></select></div>
+<input id="q" type="search" placeholder="Cari surat jalan (semua bulan)" aria-label="Cari surat jalan" style="margin:0 0 8px">
 <div class="hist" id="hist"></div>
 </section>
 </div>
 
 <div id="editor" style="display:none">
-<div class="row" style="margin:0 0 10px"><button class="gray" id="back" type="button">⬅️ Kembali ke riwayat</button></div>
+<div class="row" style="margin:0 0 10px"><button class="gray" id="back" type="button">⬅️ Kembali ke daftar</button></div>
 <p class="note" id="locknote" style="display:none;margin:0 0 10px">Hanya admin yang bisa mengubah surat jalan yang sudah disimpan. Anda hanya bisa melihatnya.</p>
 
 <section>
@@ -263,7 +264,7 @@ function curTheme(){var t=document.documentElement.getAttribute('data-theme');re
 function updTm(){var t=curTheme();$('#tm').innerHTML=ico(t==='dark'?'sun':'moon');$('#tm').setAttribute('aria-label',t==='dark'?'Pakai mode terang':'Pakai mode gelap')}
 function toggleTheme(){var t=curTheme()==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('sj_theme',t)}catch(e){}updTm()}
 function initTheme(){try{var st=localStorage.getItem('sj_theme');if(st)document.documentElement.setAttribute('data-theme',st)}catch(e){}updTm()}
-function initIcons(){setBtn('pwb','lock','Ganti password');setBtn('newbtn','doc','Buat surat jalan baru');setBtn('back','back','Kembali ke riwayat');setBtn('add','plus','Tambah barang');setBtn('del','minus','Hapus barang');setBtn('save','save','Simpan surat jalan ini');setBtn('usb','print','Cetak langsung via USB');setBtn('prt','globe','Cetak lewat browser');setBtn('dok','check','OK');setBtn('dcn','x','Batal')}
+function initIcons(){setBtn('pwb','lock','Ganti password');setBtn('newbtn','doc','Buat surat jalan baru');setBtn('back','back','Kembali ke daftar');setBtn('add','plus','Tambah barang');setBtn('del','minus','Hapus barang');setBtn('save','save','Simpan surat jalan ini');setBtn('usb','print','Cetak langsung via USB');setBtn('prt','globe','Cetak lewat browser');setBtn('dok','check','OK');setBtn('dcn','x','Batal')}
 var isAdmin=false,ADM_HASH=null,canSetup=false;
 function applyLock(){var lock=!!cur&&!isAdmin;
  document.querySelectorAll('#editor input,#editor select').forEach(function(e){e.disabled=lock});
@@ -295,7 +296,7 @@ async function loginClick(){
  }catch(e){alert('Gagal: '+((e&&e.message)||e))}
 }
 async function changePass(){if(!isAdmin||!db)return;try{await setPass()}catch(e){alert('Gagal: '+((e&&e.message)||e))}}
-function markPrinted(){if(db&&cur)db.from('suratjalan').update({printed:true,printed_at:Date.now()}).eq('no',cur).then(function(){loadHist().catch(function(){})},function(){})}
+function markPrinted(){if(db&&cur)db.from('suratjalan').update({printed:true,printed_at:Date.now()}).eq('no',cur).eq('periode',curP).then(function(){loadHist().catch(function(){})},function(){})}
 function gdVis(){var s=$('#drs'),i=$('#dr');$('#gdw').style.display=(s.value==='PBM'||(s.value==='X'&&/\bPBM\b/i.test(i.value)))?'':'none'}
 function toast(t){var e=$('#toast');e.textContent=t;e.style.display='block'}
 function showHome(){$('#home').style.display='';$('#editor').style.display='none';drawHist();window.scrollTo(0,0)}
@@ -303,6 +304,9 @@ function showEditor(){$('#toast').style.display='none';$('#home').style.display=
 function pad4(n){return ('0000'+n).slice(-4)}
 function today(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
 
+var BLN=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+function perLabel(p){var a=p.split('-');return BLN[+a[1]-1]+' '+a[0]}
+var FY=today().slice(0,4),FM=today().slice(5,7),curP='';
 var db=null,HIST=[],dbState='loading',cur='',START=1,holder='h'+Math.random().toString(36).slice(2);
 function hl(el,t,w){
  el.textContent='';
@@ -311,30 +315,47 @@ function hl(el,t,w){
  t.split(re).forEach(function(p,i){
   if(i%2){var m=document.createElement('mark');m.textContent=p;el.appendChild(m)}
   else if(p)el.appendChild(document.createTextNode(p))})}
+function drawFilter(){
+ var ys={};ys[today().slice(0,4)]=1;if(FY)ys[FY]=1;HIST.forEach(function(d){ys[d.periode.slice(0,4)]=1});
+ var fy=$('#fy'),fm=$('#fm'),o='<option value="">Semua tahun</option>';
+ Object.keys(ys).sort().reverse().forEach(function(y){o+='<option value="'+y+'">'+y+'</option>'});
+ fy.innerHTML=o;fy.value=FY;
+ var m='<option value="">Semua bulan</option>';
+ BLN.forEach(function(n,i){m+='<option value="'+('0'+(i+1)).slice(-2)+'">'+n+'</option>'});
+ fm.innerHTML=m;fm.value=FM}
 function drawHist(){
  var box=$('#hist');box.innerHTML='';
  if(!db){box.innerHTML='<p class="note">'+(dbState==='loading'?'Menyambungkan ke database...':'Database belum tersambung. Cek koneksi internet lalu muat ulang halaman.')+'</p>';return}
+ drawFilter();
  var h=HIST,q=($('#q').value||'').toLowerCase().split(/\s+/).filter(Boolean);
  if(!h.length){box.innerHTML='<p class="note">Belum ada surat jalan tersimpan.</p>';return}
  if(q.length)h=h.filter(function(d){var s=[d.no,d.pw,d.nm,d.pt,d.sp,d.dr,d.dk,d.dt,fmtDate(d.dt)].concat((d.items||[]).map(function(i){return i.n})).join(' ').toLowerCase();return q.every(function(w){return s.indexOf(w)>-1})});
- if(!h.length){box.innerHTML='<p class="note">Tidak ada surat jalan yang cocok.</p>';return}
- h.forEach(function(d){var b=document.createElement('button');b.type='button';
+ else h=h.filter(function(d){return (!FY||d.periode.slice(0,4)===FY)&&(!FM||d.periode.slice(5,7)===FM)});
+ if(!h.length){box.innerHTML='<p class="note">'+(q.length?'Tidak ada surat jalan yang cocok.':'Belum ada surat jalan pada periode ini.')+'</p>';return}
+ var cnt={};h.forEach(function(d){cnt[d.periode]=(cnt[d.periode]||0)+1});
+ var last='';
+ h.forEach(function(d){
+  if(d.periode!==last){last=d.periode;var t=document.createElement('div');t.className='note';t.style.cssText='font-weight:700;margin:16px 0 0;border-bottom:1px solid var(--mut);padding-bottom:4px';t.textContent=perLabel(d.periode)+' · '+cnt[d.periode]+' surat';box.appendChild(t)}
+  var b=document.createElement('button');b.type='button';
   var tx=d.no+' — '+(d.pw||'tanpa pengawas')+' ('+fmtDate(d.dt)+')'+'\nSPK: '+(d.sp||'-')+'  |  Dari: '+(d.dr||'-')+'  |  Dibawa ke: '+(d.dk||'-')+'\n'+((d.items||[]).map(function(i){return (i.n||'').toUpperCase()+(i.q?' ('+i.q+(i.s?' '+i.s.toUpperCase():'')+')':'')}).filter(Boolean).join(', ')||'-');b.style.whiteSpace='pre-line';b.style.borderLeft='6px solid '+(d.printed?'#1f8a4c':'#e67e22');b.style.background=d.printed?'rgba(31,138,76,.15)':'rgba(230,126,34,.18)';hl(b,tx,q);
-  b.onclick=function(){cur=d.no;setData(d);showEditor()};box.appendChild(b)});
+  b.onclick=function(){cur=d.no;curP=d.periode;setData(d);showEditor()};box.appendChild(b)});
 }
 function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
-var SEL='no,seq,doc,printed';
-function rowToDoc(r){var d=r.doc||{};d.no=r.no;d.seq=r.seq;d.printed=!!r.printed;return d}
-async function loadHist(){var r=await db.from('suratjalan').select(SEL).order('seq',{ascending:false}).limit(300);if(r.error)throw r.error;HIST=r.data.map(rowToDoc);drawHist()}
+var SEL='periode,no,seq,doc,printed';
+function rowToDoc(r){var d=r.doc||{};d.no=r.no;d.periode=r.periode;d.seq=r.seq;d.printed=!!r.printed;return d}
+async function loadHist(){var r=await db.from('suratjalan').select(SEL).order('periode',{ascending:false}).order('seq',{ascending:false}).limit(1000);if(r.error)throw r.error;HIST=r.data.map(rowToDoc);drawHist()}
 async function loadCfg(){var r=await db.from('sj_config').select('key,value').in('key',['admin','counter']);if(r.error)return;
  var a=null,st=1;r.data.forEach(function(x){if(x.key==='admin')a=(x.value&&x.value.hash)||null;if(x.key==='counter'){var v=Number(x.value&&x.value.start);st=v>0?v:1}});
  ADM_HASH=a;START=st;var h='';try{h=localStorage.getItem('sj_adm')||''}catch(e){}setAdmin(h&&h===ADM_HASH?h:null)}
 async function claimNumber(data){
- var n=Math.max(HIST.length?(parseInt(HIST[0].no,10)||0)+1:1,START);
+ var p=(data.dt||today()).slice(0,7);
+ var q=await db.from('suratjalan').select('seq').eq('periode',p).order('seq',{ascending:false}).limit(1);
+ if(q.error)throw q.error;
+ var n=q.data.length?q.data[0].seq+1:1;
  for(var t=0;t<80;t++){
   var id=pad4(n);
-  var r=await db.from('suratjalan').insert({no:id,seq:n,doc:data,created_at:Date.now()});
-  if(!r.error){data.no=id;return id}
+  var r=await db.from('suratjalan').insert({periode:p,no:id,seq:n,doc:data,created_at:Date.now()});
+  if(!r.error){data.no=id;curP=p;if(FY&&FY!==p.slice(0,4))FY=p.slice(0,4);if(FM&&FM!==p.slice(5,7))FM=p.slice(5,7);return id}
   if(r.error.code==='23505'){n++;continue}
   throw r.error;
  }
@@ -364,7 +385,7 @@ async function save(){
  saving=true;$('#save').disabled=true;
  try{
   var d=getData();
-  if(cur){d.no=cur;var u=await db.from('suratjalan').update({doc:d}).eq('no',cur);if(u.error)throw u.error}
+  if(cur){d.no=cur;var u=await db.from('suratjalan').update({doc:d}).eq('no',cur).eq('periode',curP);if(u.error)throw u.error}
   else{cur=await claimNumber(d)}
   $('#no').value=cur;render();loadHist().catch(function(){});return true;
  }catch(e){alert('Gagal menyimpan: '+((e&&e.message)||e));return false}
@@ -372,7 +393,7 @@ async function save(){
 }
 function fresh(){
  var d=getData(),n=parseInt(d.no,10);
- cur='';d.no='';d.dt=today();d.sp='';d.dr='';d.dk='';d.items=[{}];
+ cur='';curP='';d.no='';d.dt=today();d.sp='';d.dr='';d.dk='';d.items=[{}];
  setData(d);msg('');showEditor()}
 
 $('#sp').addEventListener('input',function(){var v=this.value.replace(/\D/g,'');if(v!==this.value)this.value=v});
@@ -390,6 +411,8 @@ $('#save').onclick=function(){save().then(function(ok){if(ok){var n=cur;showHome
 $('#newbtn').onclick=fresh;$('#back').onclick=showHome;
 $('#lg').onclick=loginClick;$('#pwb').onclick=changePass;$('#tm').onclick=toggleTheme;
 $('#q').addEventListener('input',drawHist);
+$('#fy').addEventListener('change',function(){FY=this.value;drawHist()});
+$('#fm').addEventListener('change',function(){FM=this.value;drawHist()});
 
 
 var pg0=S.get('sj2_pg','28')||'28';
