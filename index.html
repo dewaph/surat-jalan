@@ -245,27 +245,49 @@ function toBytes(text,len,draft,ml,bold){
  b.push(0x0c,0x1b,0x40); // form feed lalu reset printer ke kondisi normal
  return new Uint8Array(b);
 }
+var UD=null,UEP=null,UIF=null;
+if(navigator.usb)navigator.usb.addEventListener('disconnect',function(e){if(UD&&e.device===UD){UD=null;UEP=null;UIF=null}});
+async function usbClose(reset){
+ var d=UD,i=UIF;UD=null;UEP=null;UIF=null;
+ if(!d)return;
+ try{if(d.opened){if(i!==null)try{await d.releaseInterface(i)}catch(e){}if(reset)try{await d.reset()}catch(e){}await d.close()}}catch(e){}}
+async function usbOpen(){
+ if(UD&&UD.opened&&UEP!==null)return;
+ var dev=null;
+ try{var l=await navigator.usb.getDevices();dev=l.filter(function(d){return d.vendorId===0x04b8})[0]||null}catch(e){}
+ if(!dev)dev=await navigator.usb.requestDevice({filters:[{vendorId:0x04b8},{classCode:7}]});
+ if(!dev.opened)await dev.open();
+ if(!dev.configuration)await dev.selectConfiguration(1);
+ var ep=null,ifn=null;
+ dev.configuration.interfaces.forEach(function(i){i.alternates.forEach(function(a){
+  if(a.interfaceClass===7&&ep===null){a.endpoints.forEach(function(e){if(e.direction==='out'&&ep===null){ep=e.endpointNumber;ifn=i.interfaceNumber}})}})});
+ if(ep===null){try{await dev.close()}catch(e){}throw new Error('Jalur cetak printer tidak ditemukan.')}
+ UD=dev;UEP=ep;UIF=ifn;
+ await dev.claimInterface(ifn);
+ try{await dev.clearHalt('out',ep)}catch(e){}}
+async function usbSend(data){
+ for(var t=0;t<2;t++){
+  try{
+   await usbOpen();
+   for(var o=0;o<data.length;o+=4096)await UD.transferOut(UEP,data.slice(o,o+4096));
+   return;
+  }catch(e){
+   await usbClose(t===0);
+   if((e&&e.name==='NotFoundError')||t===1)throw e;
+  }
+ }
+}
 async function usbPrint(){
  if(!navigator.usb){msg('Browser ini belum mendukung WebUSB. Pakai Chrome di Android, atau pilih cetak lewat browser.',1);return}
- var dev,ifn=null;
  try{
-  dev=await navigator.usb.requestDevice({filters:[{vendorId:0x04b8},{classCode:7}]});
-  await dev.open();
-  if(!dev.configuration)await dev.selectConfiguration(1);
-  var ep=null;
-  dev.configuration.interfaces.forEach(function(i){i.alternates.forEach(function(a){
-   if(a.interfaceClass===7&&ep===null){a.endpoints.forEach(function(e){if(e.direction==='out'&&ep===null){ep=e.endpointNumber;ifn=i.interfaceNumber}})}})});
-  if(ep===null)throw new Error('Jalur cetak printer tidak ditemukan.');
-  await dev.claimInterface(ifn);
   var text=RAW,len=Math.max(28,text.split('\n').length);
   var ml=Math.max(0,Math.min(40,Math.round(Number($('#ml').value)||0)));
   var data=toBytes(text.replace(/\s+$/,''),Math.min(len,127),$('#sd').value==='1',ml,$('#bd').value==='1');
-  for(var o=0;o<data.length;o+=4096)await dev.transferOut(ep,data.slice(o,o+4096));
-  await new Promise(function(r){setTimeout(r,1000)}); // beri waktu printer menerima semua data sebelum koneksi ditutup
+  await usbSend(data);
   msg('Terkirim ke printer.');markPrinted();
  }catch(e){
   msg(e&&e.name==='NotFoundError'?'Printer belum dipilih.':'Gagal mencetak: '+(e.message||e)+'. Cek kabel OTG dan pastikan printer menyala.',1);
- }finally{try{if(dev&&dev.opened){if(ifn!==null)try{await dev.releaseInterface(ifn)}catch(e){}await dev.close()}}catch(e){}}
+ }
 }
 
 function syncDr(){var s=$('#drs'),i=$('#dr');
