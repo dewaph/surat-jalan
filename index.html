@@ -234,8 +234,8 @@ function render(){gdVis();var d=getData(),t=build(d);RAW=t;$('#pv').innerHTML=to
 
 function msg(t,err){var m=$('#msg');m.textContent=t;m.style.color=err?'#c0392b':'inherit'}
 
-var PUSH_U=432; // dorong kertas keluar setelah cetak, satuan 1/216 inci (432 = 2 inci). Perbesar bila kertas belum cukup keluar.
-function feedBytes(op,u){var a=[];while(u>0){var n=Math.min(255,u);a.push(0x1b,op,n);u-=n}return a} // op 0x4a = maju (ESC J), 0x6a = mundur (ESC j)
+var EJECT_U=432; // kertas tunggal: setelah cetak, dorong maju sedikit supaya keluar. Satuan 1/216 inci (432 = 2 inci). Ubah jika kurang/terlalu jauh.
+function feedFwd(u){var a=[];while(u>0){var n=Math.min(255,u);a.push(0x1b,0x4a,n);u-=n}return a} // ESC J n: maju n/216 inci
 function toBytes(text,len,draft,ml,bold){
  // reset, batal proporsional, paksa 10 cpi (pica), batal condensed & double-width, 6 baris/inci, panjang halaman, draft/LQ, tebal
  var b=[0x1b,0x40,0x1b,0x70,0,0x1b,0x50,0x12,0x1b,0x57,0,0x1b,0x32,0x1b,0x43,len,0x1b,0x78,draft?0:1,0x1b,bold?0x45:0x46];
@@ -244,7 +244,7 @@ function toBytes(text,len,draft,ml,bold){
   if(/^─+$/.test(l)){b.push(0x1b,0x2d,1);for(var k=0;k<l.length;k++)b.push(0x20);b.push(0x1b,0x2d,0)} // garis penuh: spasi bergaris-bawah
   else for(var i=0;i<l.length;i++){var c=l.charCodeAt(i);b.push(c<128?c:63)}
   b.push(13,10)});
- b.push(0x0c);b=b.concat(feedBytes(0x4a,PUSH_U));b.push(0x1b,0x40); // form feed, dorong kertas keluar, lalu reset printer
+ b.push(0x0c);b=b.concat(feedFwd(EJECT_U));b.push(0x1b,0x40); // form feed, dorong kertas sampai keluar, lalu reset printer
  return new Uint8Array(b);
 }
 var UD=null,UEP=null,UIF=null;
@@ -285,10 +285,7 @@ async function usbPrint(){
   var text=RAW,len=Math.max(28,text.split('\n').length);
   var ml=Math.max(0,Math.min(40,Math.round(Number($('#ml').value)||0)));
   var data=toBytes(text.replace(/\s+$/,''),Math.min(len,127),$('#sd').value==='1',ml,$('#bd').value==='1');
-  var fed=0;try{fed=Number(localStorage.getItem('sj_fed'))||0}catch(e){}
-  var rev=feedBytes(0x6a,fed),all=new Uint8Array(rev.length+data.length);all.set(rev,0);all.set(data,rev.length); // tarik kertas kembali ke posisi awal sebelum mencetak
-  await usbSend(all);
-  try{localStorage.setItem('sj_fed',String(PUSH_U))}catch(e){}
+  await usbSend(data);
   msg('Terkirim ke printer.');markPrinted();
  }catch(e){
   msg(e&&e.name==='NotFoundError'?'Printer belum dipilih.':'Gagal mencetak: '+(e.message||e)+'. Cek kabel OTG dan pastikan printer menyala.',1);
