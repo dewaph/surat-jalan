@@ -86,7 +86,7 @@ mark{background:#ffe066;color:#000;border-radius:2px;padding:0 1px}
 
 <div id="editor" style="display:none">
 <div class="row" style="margin:0 0 10px"><button class="gray" id="back" type="button">⬅️ Kembali ke daftar</button></div>
-<p class="note" id="locknote" style="display:none;margin:0 0 10px">Hanya admin yang bisa mengubah surat jalan yang sudah disimpan. Anda hanya bisa melihatnya.</p>
+<p class="note" id="locknote" style="display:none;margin:0 0 10px">Hubungi admin untuk mengubah atau mencetak surat jalan</p>
 
 <section>
 <h2>Data surat</h2>
@@ -386,12 +386,25 @@ function drawHist(){
  h.forEach(function(d){
   if(d.periode!==last){last=d.periode;var t=document.createElement('div');t.className='note';t.style.cssText='font-weight:700;margin:16px 0 0;border-bottom:1px solid var(--mut);padding-bottom:4px';t.textContent=perLabel(d.periode)+' · '+cnt[d.periode]+' surat';box.appendChild(t)}
   var b=document.createElement('button');b.type='button';
-  var tx=(isAdmin&&isNewDoc(d)?'🆕 BARU · ':'')+d.no+' — '+(d.pw||'tanpa pengawas')+' ('+fmtDate(d.dt)+')'+'\nSPK: '+(d.sp||'-')+'  |  Dari: '+(d.dr||'-')+'  |  Dibawa ke: '+(d.dk||'-')+'\n'+((d.items||[]).map(function(i){return (i.n||'').toUpperCase()+(i.q?' ('+i.q+(i.s?' '+i.s.toUpperCase():'')+')':'')}).filter(Boolean).join(', ')||'-');b.style.whiteSpace='pre-line';b.style.borderLeft='6px solid '+(d.printed?'#1f8a4c':'#e67e22');b.style.background=d.printed?'rgba(31,138,76,.15)':'rgba(230,126,34,.18)';hl(b,tx,q);
-  b.onclick=function(){cur=d.no;curP=d.periode;setData(d);showEditor()};box.appendChild(b)});
+  var tx=(isAdmin&&isNewDoc(d)?'🆕 BARU · ':'')+d.no+' — '+(d.pw||'tanpa pengawas')+' ('+fmtDate(d.dt)+')'+'\nSPK: '+(d.sp||'-')+'  |  Dari: '+(d.dr||'-')+'  |  Dibawa ke: '+(d.dk||'-')+'\n'+((d.items||[]).map(function(i){return (i.n||'').toUpperCase()+(i.q?' ('+i.q+(i.s?' '+i.s.toUpperCase():'')+')':'')}).filter(Boolean).join(', ')||'-')+'\n'+(d.printed?'🖨️ SUDAH DICETAK':'🖨️ BELUM DICETAK')+'  |  '+(d.kembali?'✅ SUDAH KEMBALI KE ADMIN':'⏳ BELUM KEMBALI');
+  var ok=d.kembali;b.style.whiteSpace='pre-line';b.style.borderLeft='6px solid '+(ok?'#1f8a4c':'#e67e22');b.style.background=ok?'rgba(31,138,76,.15)':'rgba(230,126,34,.18)';hl(b,tx,q);
+  b.style.marginTop='0';b.style.width='auto';b.style.flex='1';b.style.minWidth='0';
+  b.onclick=function(){cur=d.no;curP=d.periode;setData(d);showEditor()};
+  var w=document.createElement('div');w.style.cssText='display:flex;gap:8px;align-items:stretch;margin-top:8px';w.appendChild(b);
+  if(isAdmin){var c=document.createElement('button');c.type='button';c.textContent=ok?'✔':'☐';c.setAttribute('aria-label',ok?'Batalkan tanda sudah kembali':'Tandai sudah kembali ke admin');c.title=ok?'Sudah kembali (ketuk untuk membatalkan)':'Tandai sudah kembali ke admin';
+   c.style.cssText='margin-top:0;width:56px;flex:none;text-align:center;font-size:24px;padding:0;font-weight:700;'+(ok?'background:#1f8a4c;color:#fff;':'');
+   c.onclick=function(){toggleKembali(d)};w.appendChild(c)}
+  box.appendChild(w)});
 }
+async function toggleKembali(d){
+ if(!isAdmin||!db)return;
+ if(d.kembali&&!confirm('Batalkan tanda sudah kembali untuk surat jalan '+d.no+'?'))return;
+ var r=await db.from('suratjalan').update({kembali:!d.kembali,kembali_at:d.kembali?null:Date.now()}).eq('no',d.no).eq('periode',d.periode);
+ if(r.error){alert('Gagal menyimpan: '+r.error.message);return}
+ await loadHist()}
 function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
-var SEL='periode,no,seq,doc,printed,created_at,dibaca';
-function rowToDoc(r){var d=r.doc||{};d.no=r.no;d.periode=r.periode;d.seq=r.seq;d.dibaca=!!r.dibaca;d.created_at=Number(r.created_at)||0;d.printed=!!r.printed;return d}
+var SEL='periode,no,seq,doc,printed,created_at,dibaca,kembali';
+function rowToDoc(r){var d=r.doc||{};d.no=r.no;d.periode=r.periode;d.seq=r.seq;d.dibaca=!!r.dibaca;d.created_at=Number(r.created_at)||0;d.printed=!!r.printed;d.kembali=!!r.kembali;return d}
 async function loadHist(){var r=await db.from('suratjalan').select(SEL).order('periode',{ascending:false}).order('seq',{ascending:false}).limit(1000);if(r.error)throw r.error;HIST=r.data.map(rowToDoc);drawHist()}
 async function loadCfg(){var r=await db.from('sj_config').select('key,value').in('key',['admin','counter']);if(r.error)return;
  var a=null,st=1;r.data.forEach(function(x){if(x.key==='admin')a=(x.value&&x.value.hash)||null;if(x.key==='counter'){var v=Number(x.value&&x.value.start);st=v>0?v:1}});
@@ -428,7 +441,7 @@ function validate(){
 var saving=false;
 async function save(){
  if(saving)return false;
- if(cur&&!isAdmin){alert('Hanya admin yang bisa mengubah surat yang sudah disimpan.');return false}
+ if(cur&&!isAdmin){alert('Hubungi admin untuk mengubah atau mencetak surat jalan.');return false}
  if(!db){alert('Database belum tersambung, surat belum bisa disimpan.');return false}
  if(!validate())return false
  saving=true;$('#save').disabled=true;
