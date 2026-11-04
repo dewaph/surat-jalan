@@ -130,7 +130,7 @@ mark{background:#ffe066;color:#000;border-radius:2px;padding:0 1px}
 <div><label for="sd">Kecepatan</label><select id="sd"><option value="1">Cepat (draft)</option><option value="0">Halus (LQ)</option></select></div>
 <div><label for="fs">Ukuran huruf cetak</label><select id="fs"><option value="11">11 pt (kecil)</option><option value="12">12 pt</option><option value="12.5">12,5 pt (pas kertas 9,5 inci)</option><option value="13">13 pt (besar)</option></select></div>
 <div><label for="ox">Geser posisi ke kanan (mm)</label><input id="ox" type="number" step="1" inputmode="numeric" value="0"></div>
-<div><label for="ml">Margin kiri printer USB (kolom)</label><input id="ml" type="number" min="0" max="40" step="1" inputmode="numeric" value="0"></div>
+<div><label for="ml">Geser kanan printer USB (kolom)</label><input id="ml" type="number" min="0" max="40" step="1" inputmode="numeric" value="0"></div>
 <div><label for="bd">Huruf tebal (USB)</label><select id="bd"><option value="0">Tidak</option><option value="1">Ya</option></select></div>
 </div>
 <div class="sheet"><pre id="pv"></pre></div>
@@ -224,13 +224,13 @@ function render(){gdVis();var d=getData(),t=build(d);$('#pv').textContent=t;$('#
  var n=Math.max(Number($('#pg').value)||28,t.split('\n').length);
  var fs=Number($('#fs').value)||12.5,ox=Number($('#ox').value)||0,left=Math.max(0,(9.5*72-80*0.6*fs)/2+ox*72/25.4);
  st.textContent='@page{size:9.5in '+(n/6)+'in;margin:0}@media print{#pr pre{font:'+fs+'pt/12pt "Courier New",Courier,monospace;padding-left:'+left.toFixed(1)+'pt}}';
- S.set('sj2_draft',d);S.set('sj2_pg',$('#pg').value);S.set('sj2_fs',$('#fs').value);S.set('sj2_ox',$('#ox').value);S.set('sj2_ml',$('#ml').value);S.set('sj2_bd',$('#bd').value)}
+ S.set('sj2_draft',d);S.set('sj2_pg',$('#pg').value);S.set('sj2_fs',$('#fs').value);S.set('sj2_ox',$('#ox').value);S.set('sj3_ml',$('#ml').value);S.set('sj2_bd',$('#bd').value)}
 
 function msg(t,err){var m=$('#msg');m.textContent=t;m.style.color=err?'#c0392b':'inherit'}
 
 function toBytes(text,len,draft,ml,bold){
- // reset, paksa 10 cpi (pica), batal condensed & double-width, 6 baris/inci, panjang halaman, draft/LQ, tebal
- var b=[0x1b,0x40,0x1b,0x50,0x12,0x1b,0x57,0,0x1b,0x32,0x1b,0x43,len,0x1b,0x78,draft?0:1,0x1b,bold?0x45:0x46];
+ // reset, batal proporsional, paksa 10 cpi (pica), batal condensed & double-width, 6 baris/inci, panjang halaman, draft/LQ, tebal
+ var b=[0x1b,0x40,0x1b,0x70,0,0x1b,0x50,0x12,0x1b,0x57,0,0x1b,0x32,0x1b,0x43,len,0x1b,0x78,draft?0:1,0x1b,bold?0x45:0x46];
  if(ml>0)b.push(0x1b,0x51,Math.min(255,80+ml),0x1b,0x6c,ml);
  var s=text.replace(/\n/g,'\r\n')+'\r\n';
  for(var i=0;i<s.length;i++){var c=s.charCodeAt(i);b.push(c<128?c:63)}
@@ -461,7 +461,7 @@ $('#fm').addEventListener('change',function(){FM=this.value;drawHist()});
 
 var pg0=S.get('sj2_pg','28')||'28';
 var d0=S.get('sj2_draft',null);
-$('#pg').value=pg0;$('#fs').value=String(S.get('sj2_fs','12.5'));$('#ox').value=S.get('sj2_ox',0);$('#ml').value=S.get('sj2_ml',0);$('#bd').value=String(S.get('sj2_bd','0'));
+$('#pg').value=pg0;$('#fs').value=String(S.get('sj2_fs','12.5'));$('#ox').value=S.get('sj2_ox',0);$('#ml').value=S.get('sj3_ml',0);$('#bd').value=String(S.get('sj2_bd','0'));
 if(d0){setData(d0)}else{itemRow();render()}
 if(!$('#dt').value)$('#dt').value=today();
 
