@@ -49,6 +49,8 @@ button.dark{background:linear-gradient(180deg,#475569,#2f3b4c);border-color:#2f3
 .row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .row>*{flex:1 1 150px}
 .sheet{background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:12px;overflow-x:auto}
+/* garis penuh: lebar dihitung dengan satuan ch agar sama persis dengan lebar teks */
+.hr{display:inline-block;height:0;border-bottom:1.5px solid currentColor;vertical-align:.3em}
 pre{margin:0;font:11px/1.25 "Courier New",Courier,monospace;white-space:pre}
 .note{font-size:13px;color:var(--mut);margin:8px 0 0}
 .msg{font-size:14px;margin-top:8px;min-height:20px}
@@ -221,7 +223,9 @@ function build(d){
  while(L.length<len)L.push('');
  return L.map(function(x){return x.replace(/\s+$/,'')}).join('\n');
 }
-function render(){gdVis();var d=getData(),t=build(d);$('#pv').textContent=t;$('#prp').textContent=t.replace(/\s+$/,'');
+var RAW='';
+function toHtml(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/^─+$/gm,function(m){return '<span class="hr" style="width:'+m.length+'ch"></span>'})}
+function render(){gdVis();var d=getData(),t=build(d);RAW=t;$('#pv').innerHTML=toHtml(t);$('#prp').innerHTML=toHtml(t.replace(/\s+$/,''));
  var st=document.getElementById('pgs');if(!st){st=document.createElement('style');st.id='pgs';document.head.appendChild(st)}
  var n=Math.max(Number($('#pg').value)||28,t.split('\n').length);
  var fs=Number($('#fs').value)||13,ox=Number($('#ox').value)||0,left=Math.max(0,(9.5*72-COLS*0.6*fs)/2+ox*72/25.4);
@@ -252,7 +256,7 @@ async function usbPrint(){
    if(a.interfaceClass===7&&ep===null){a.endpoints.forEach(function(e){if(e.direction==='out'&&ep===null){ep=e.endpointNumber;ifn=i.interfaceNumber}})}})});
   if(ep===null)throw new Error('Jalur cetak printer tidak ditemukan.');
   await dev.claimInterface(ifn);
-  var text=$('#pv').textContent,len=Math.max(Number($('#pg').value)||28,text.split('\n').length);
+  var text=RAW,len=Math.max(Number($('#pg').value)||28,text.split('\n').length);
   var ml=Math.max(0,Math.min(40,Math.round(Number($('#ml').value)||0)));
   var data=toBytes(text.replace(/\s+$/,''),Math.min(len,127),$('#sd').value==='1',ml,$('#bd').value==='1');
   for(var o=0;o<data.length;o+=4096)await dev.transferOut(ep,data.slice(o,o+4096));
