@@ -127,7 +127,7 @@ mark{background:#ffe066;color:#000;border-radius:2px;padding:0 1px}
 
 <section>
 <h2>Pratinjau</h2>
-<div class="g" style="margin-bottom:10px">
+<div class="g" style="display:none">
 <div><label for="pg">Panjang kertas</label><select id="pg"><option value="66">Continuous form 11 inci (66 baris)</option><option value="33">5,5 inci (33 baris)</option><option value="51">Folio 8,5 inci (51 baris)</option><option value="28">1 surat jalan (28 baris)</option></select></div>
 <div><label for="sd">Kecepatan</label><select id="sd"><option value="1">Cepat (draft)</option><option value="0">Halus (LQ)</option></select></div>
 <div><label for="fs">Ukuran huruf cetak</label><select id="fs"><option value="11">11 pt (kecil)</option><option value="12">12 pt</option><option value="12.5">12,5 pt</option><option value="13">13 pt (pas kertas 9,5 inci)</option></select></div>
@@ -219,7 +219,7 @@ function build(d){
  function nmc(v,z){return ctr(v?'('+U(v)+')':'(...........)',z)}
  var pbm=/\bPBM\b/i.test(d.dr||'');L.push((pbm?nmc(d.gd,SZ[0]):pad('',SZ[0]))+nmc(d.nm,SZ[1])+nmc(d.pw,SZ[2])+nmc(d.pk,SZ[3])+nmc(d.pn,SZ[4]));
  L.push((pbm?ctr('GUDANG',SZ[0]):pad('',SZ[0]))+ctr('PEMBAWA',SZ[1])+ctr('PENGAWAS',SZ[2])+ctr('PIKET KELUAR',SZ[3])+ctr('PENERIMA',SZ[4]));
- var len=Number(d.pg)||28;
+ var len=28;
  while(L.length<len)L.push('');
  return L.map(function(x){return x.replace(/\s+$/,'')}).join('\n');
 }
@@ -227,7 +227,7 @@ var RAW='';
 function toHtml(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/^─+$/gm,function(m){return '<span class="hr" style="width:'+m.length+'ch"></span>'})}
 function render(){gdVis();var d=getData(),t=build(d);RAW=t;$('#pv').innerHTML=toHtml(t);$('#prp').innerHTML=toHtml(t.replace(/\s+$/,''));
  var st=document.getElementById('pgs');if(!st){st=document.createElement('style');st.id='pgs';document.head.appendChild(st)}
- var n=Math.max(Number($('#pg').value)||28,t.split('\n').length);
+ var n=Math.max(28,t.split('\n').length);
  var fs=Number($('#fs').value)||13,ox=Number($('#ox').value)||0,left=Math.max(0,(9.5*72-COLS*0.6*fs)/2+ox*72/25.4);
  st.textContent='@page{size:9.5in '+(n/6)+'in;margin:0}@media print{#pr pre{font:'+fs+'pt/12pt "Courier New",Courier,monospace;padding-left:'+left.toFixed(1)+'pt}}';
  S.set('sj2_draft',d);S.set('sj2_pg',$('#pg').value);S.set('sj2_fs',$('#fs').value);S.set('sj2_ox',$('#ox').value);S.set('sj3_ml',$('#ml').value);S.set('sj2_bd',$('#bd').value)}
@@ -242,28 +242,30 @@ function toBytes(text,len,draft,ml,bold){
   if(/^─+$/.test(l)){b.push(0x1b,0x2d,1);for(var k=0;k<l.length;k++)b.push(0x20);b.push(0x1b,0x2d,0)} // garis penuh: spasi bergaris-bawah
   else for(var i=0;i<l.length;i++){var c=l.charCodeAt(i);b.push(c<128?c:63)}
   b.push(13,10)});
- b.push(0x0c);return new Uint8Array(b);
+ b.push(0x0c,0x1b,0x40); // form feed lalu reset printer ke kondisi normal
+ return new Uint8Array(b);
 }
 async function usbPrint(){
  if(!navigator.usb){msg('Browser ini belum mendukung WebUSB. Pakai Chrome di Android, atau pilih cetak lewat browser.',1);return}
- var dev;
+ var dev,ifn=null;
  try{
   dev=await navigator.usb.requestDevice({filters:[{vendorId:0x04b8},{classCode:7}]});
   await dev.open();
   if(!dev.configuration)await dev.selectConfiguration(1);
-  var ifn=null,ep=null;
+  var ep=null;
   dev.configuration.interfaces.forEach(function(i){i.alternates.forEach(function(a){
    if(a.interfaceClass===7&&ep===null){a.endpoints.forEach(function(e){if(e.direction==='out'&&ep===null){ep=e.endpointNumber;ifn=i.interfaceNumber}})}})});
   if(ep===null)throw new Error('Jalur cetak printer tidak ditemukan.');
   await dev.claimInterface(ifn);
-  var text=RAW,len=Math.max(Number($('#pg').value)||28,text.split('\n').length);
+  var text=RAW,len=Math.max(28,text.split('\n').length);
   var ml=Math.max(0,Math.min(40,Math.round(Number($('#ml').value)||0)));
   var data=toBytes(text.replace(/\s+$/,''),Math.min(len,127),$('#sd').value==='1',ml,$('#bd').value==='1');
   for(var o=0;o<data.length;o+=4096)await dev.transferOut(ep,data.slice(o,o+4096));
+  await new Promise(function(r){setTimeout(r,1000)}); // beri waktu printer menerima semua data sebelum koneksi ditutup
   msg('Terkirim ke printer.');markPrinted();
  }catch(e){
   msg(e&&e.name==='NotFoundError'?'Printer belum dipilih.':'Gagal mencetak: '+(e.message||e)+'. Cek kabel OTG dan pastikan printer menyala.',1);
- }finally{try{if(dev&&dev.opened)await dev.close()}catch(e){}}
+ }finally{try{if(dev&&dev.opened){if(ifn!==null)try{await dev.releaseInterface(ifn)}catch(e){}await dev.close()}}catch(e){}}
 }
 
 function syncDr(){var s=$('#drs'),i=$('#dr');
@@ -469,7 +471,7 @@ $('#fm').addEventListener('change',function(){FM=this.value;drawHist()});
 
 var pg0=S.get('sj2_pg','28')||'28';
 var d0=S.get('sj2_draft',null);
-$('#pg').value=pg0;$('#fs').value=String(S.get('sj2_fs','13'));$('#ox').value=S.get('sj2_ox',0);$('#ml').value=S.get('sj3_ml',0);$('#bd').value=String(S.get('sj2_bd','0'));
+$('#pg').value='28';$('#fs').value='13';$('#ox').value=0;$('#ml').value=0;$('#bd').value='0';
 if(d0){setData(d0)}else{itemRow();render()}
 if(!$('#dt').value)$('#dt').value=today();
 
