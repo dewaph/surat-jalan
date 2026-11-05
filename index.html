@@ -305,7 +305,7 @@ function curTheme(){var t=document.documentElement.getAttribute('data-theme');re
 function updTm(){var t=curTheme();$('#tm').innerHTML=ico(t==='dark'?'sun':'moon');$('#tm').setAttribute('aria-label',t==='dark'?'Pakai mode terang':'Pakai mode gelap')}
 function toggleTheme(){var t=curTheme()==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('sj_theme',t)}catch(e){}updTm()}
 function initTheme(){try{var st=localStorage.getItem('sj_theme');if(st)document.documentElement.setAttribute('data-theme',st)}catch(e){}updTm()}
-function initIcons(){setBtn('newbtn','doc','Buat surat jalan baru');setBtn('back','back','Kembali ke daftar');setBtn('add','plus','Tambah barang');setBtn('del','minus','Hapus barang');setBtn('save','save','Simpan surat jalan ini');setBtn('usb','print','Cetak langsung via USB');setBtn('dok','check','OK');setBtn('dcn','x','Batal')}
+function initIcons(){setBtn('newbtn','doc','Buat surat jalan baru');setBtn('back','back','Kembali ke daftar');setBtn('add','plus','Tambah barang');setBtn('del','minus','Hapus barang');setBtn('save','save','Simpan surat jalan ini');setBtn('usb','print','Cetak di printer bangunan');setBtn('l360','print','Cetak di printer manika');setBtn('dok','check','OK');setBtn('dcn','x','Batal')}
 var isAdmin=false,ADM_HASH=null,canSetup=false;
 function applyLock(){var lock=!!cur&&!isAdmin;
  document.querySelectorAll('#editor input,#editor select').forEach(function(e){e.disabled=lock});
@@ -492,7 +492,10 @@ $('#items').addEventListener('click',function(e){
   if(!document.querySelector('.item'))itemRow();render()}});
 $('#drs').addEventListener('change',syncDr);
 $('#usb').onclick=function(){if(!isAdmin)return;save().then(function(ok){if(ok)usbPrint()})};
+window.addEventListener('afterprint',function(){render()});
+var COPIES=3; // jumlah salinan otomatis untuk printer manika
 $('#l360').onclick=function(){if(!isAdmin)return;save().then(function(ok){if(ok){render();
+ var h=toHtml(RAW.replace(/\s+$/,'')),pgs=[];for(var i=1;i<=COPIES;i++)pgs.push('<div'+(i<COPIES?' style="break-after:page;page-break-after:always"':'')+'>'+h+'</div>');$('#prp').innerHTML=pgs.join(''); // satu halaman A4 per salinan
  document.getElementById('pgs').textContent='@page{size:A4 portrait;margin:12mm 15mm}@media print{#pr pre{font:11.5pt/14.5pt "Courier New",Courier,monospace;padding-left:0}}'; // kertas A4 untuk printer inkjet Epson L360
  window.print();markPrinted()}})};
 $('#save').onclick=function(){save().then(function(ok){if(ok){var n=cur;showHome();toast('Tersimpan: surat jalan no. '+n+'.')}})};
