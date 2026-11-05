@@ -86,6 +86,8 @@ mark{background:#ffe066;color:#000;border-radius:2px;padding:0 1px}
 
 <div id="editor" style="display:none">
 <div class="row" style="margin:0 0 10px"><button class="gray" id="back" type="button">⬅️ Kembali ke daftar</button></div>
+<div class="row" id="scanrow" style="margin:0 0 6px"><button class="p" id="scanbtn" type="button">📷 Isi dari foto nota</button><input id="scanf" type="file" accept="image/*" style="display:none"></div>
+<p class="note" id="scanmsg" style="display:none;margin:0 0 10px"></p>
 <p class="note" id="locknote" style="display:none;margin:0 0 10px">Hubungi admin untuk mengubah atau mencetak surat jalan</p>
 
 <section>
@@ -314,7 +316,7 @@ function applyLock(){var lock=!!cur&&!isAdmin;
  document.querySelectorAll('#editor details').forEach(function(d){d.style.display=lock?'none':''});
 
  $('#locknote').style.display=lock?'block':'none'}
-function applyRole(){var on=isAdmin;$('#usb').style.display=$('#l360').style.display=on?'':'none';setBtn('lg',on?'out':'key',on?'Keluar':'Login');applyLock();drawHist()}
+function applyRole(){var on=isAdmin;$('#usb').style.display=$('#l360').style.display=on?'':'none';setBtn('lg',on?'out':'key',on?'Keluar':'Login');applyLock();scanVis();drawHist()}
 function setAdmin(h){isAdmin=!!h;try{if(h)localStorage.setItem('sj_adm',h);else localStorage.removeItem('sj_adm')}catch(e){}applyRole()}
 function sha(s){return crypto.subtle.digest('SHA-256',new TextEncoder().encode('sj-v1:'+s)).then(function(b){return Array.prototype.map.call(new Uint8Array(b),function(x){return('0'+x.toString(16)).slice(-2)}).join('')})}
 function askPass(title,twice){return new Promise(function(res){
@@ -360,7 +362,7 @@ window.addEventListener('popstate',function(){
  else if(k==='edit')showHome()
  else if(k==='home')exitGuard()});
 function showHome(){navClose('edit');$('#home').style.display='';$('#editor').style.display='none';drawHist();window.scrollTo(0,0)}
-function showEditor(){if(NAV[NAV.length-1]!=='edit')navPush('edit');$('#toast').style.display='none';$('#home').style.display='none';$('#editor').style.display='';applyLock();render();window.scrollTo(0,0)}
+function showEditor(){if(NAV[NAV.length-1]!=='edit')navPush('edit');scanVis();smsg('');$('#toast').style.display='none';$('#home').style.display='none';$('#editor').style.display='';applyLock();render();window.scrollTo(0,0)}
 function pad4(n){return ('0000'+n).slice(-4)}
 function today(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
 
@@ -498,6 +500,7 @@ async function save(){
  finally{saving=false;$('#save').disabled=false}
 }
 function fresh(){
+ SCANQ=[];SCANN=0;smsg('');
  var d=getData(),n=parseInt(d.no,10);
  cur='';curP='';d.no='';d.dt=today();d.nm='';d.pt='';d.sp='';d.dr='';d.dk='';d.pw='';d.gd='';d.pk='';d.pn='';d.items=[{}];
  setData(d);msg('');showEditor()}
@@ -513,13 +516,72 @@ $('#items').addEventListener('click',function(e){
 $('#drs').addEventListener('change',syncDr);
 $('#usb').onclick=function(){if(!isAdmin)return;save().then(function(ok){if(ok)usbPrint()})};
 window.addEventListener('afterprint',function(){render()});
+// === Isi form dari foto nota (AI lewat Supabase Edge Function "scan-nota") ===
+var SB_JWT='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFsbm1qeHl5ZmhreXR3a3d6cG9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0OTU0NjAsImV4cCI6MjEwODA3MTQ2MH0.PxM8rw5yMKSGaIZyCiFO_oHaSd6e1D4iCuYdRDZV5GY';
+function scanVis(){var r=$('#scanrow');if(r)r.style.display=(cur&&!isAdmin)?'none':''}
+function smsg(t,err){var m=$('#scanmsg');m.style.display=t?'':'none';m.textContent=t;m.style.color=err?'#c0392b':'#1f8a4c'}
+function shrinkImg(f){return new Promise(function(ok,no){
+ var u=URL.createObjectURL(f),im=new Image();
+ im.onload=function(){var M=1600,w=im.naturalWidth,h=im.naturalHeight,k=Math.min(1,M/Math.max(w,h)),c=document.createElement('canvas');
+  c.width=Math.round(w*k);c.height=Math.round(h*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);
+  ok({image:c.toDataURL('image/jpeg',0.82).split(',')[1],media_type:'image/jpeg'})};
+ im.onerror=function(){URL.revokeObjectURL(u);no(new Error('Foto tidak bisa dibuka'))};im.src=u})}
+var SCANQ=[],SCANN=0,SCANBASE=null;
+function normPlace(v){return String(v==null?'':v).trim().toUpperCase().replace(/\s+/g,' ')}
+function scanGroups(j){
+ var base={};['nm','pt','sp','pw'].forEach(function(k){base[k]=normPlace(j[k])});
+ var map={},order=[];
+ (Array.isArray(j.items)?j.items:[]).forEach(function(x){x=x||{};
+  var it={n:normPlace(x.n),q:String(x.q==null?'':x.q).trim(),s:normPlace(x.s),k:normPlace(x.k)};
+  if(!it.n&&!it.q)return;
+  var dr=normPlace(x.dr||j.dr),dk=normPlace(x.dk||j.dk),key=dr+'|'+dk;
+  if(!map[key]){map[key]={dr:dr,dk:dk,items:[]};order.push(key)}
+  map[key].items.push(it)});
+ return {base:base,groups:order.map(function(k){return map[k]})}}
+function fillGroup(g){
+ var d=getData(),b=SCANBASE||{};
+ ['nm','pt','sp','pw'].forEach(function(k){if(b[k])d[k]=b[k]});
+ d.dr=g.dr;d.dk=g.dk;d.items=g.items;d.gd='';d.pk='';d.pn='';
+ setData(d)}
+function applyScan(j){
+ var r=scanGroups(j),n=0;
+ SCANBASE=r.base;SCANQ=[];SCANN=r.groups.length;
+ if(!r.groups.length){ // tidak ada barang terbaca: isi data header saja
+  var d=getData();['nm','pt','sp','pw'].forEach(function(k){if(r.base[k]){d[k]=r.base[k];n++}});setData(d);return {n:n,total:0}}
+ fillGroup(r.groups[0]);n=1;
+ SCANQ=r.groups.slice(1);
+ return {n:n,total:r.groups.length}}
+function loadNextScan(n){
+ var g=SCANQ.shift();
+ cur='';curP='';var d=getData();d.no='';setData(d);fillGroup(g);
+ scanBanner('Surat jalan no. '+n+' tersimpan. ');window.scrollTo(0,0)}
+function scanBanner(pre){
+ var done=SCANN-SCANQ.length;
+ smsg((pre||'')+'Surat '+done+' dari '+SCANN+' (dari foto): '+($('#dr').value||'-')+' → '+($('#dk').value||'-')+'. Periksa lalu simpan, surat berikutnya otomatis terbuka.')}
+$('#scanbtn').onclick=function(){$('#scanf').click()};
+$('#scanf').onchange=async function(){
+ var f=this.files&&this.files[0];this.value='';if(!f)return;
+ var b=$('#scanbtn'),t0=b.innerHTML;b.disabled=true;b.textContent='⏳ Membaca foto...';smsg('');
+ try{
+  var img=await shrinkImg(f);
+  var r=await fetch(SB_URL+'/functions/v1/scan-nota',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_JWT,'apikey':SB_JWT},body:JSON.stringify(img)});
+  var j=await r.json().catch(function(){return {}});
+  if(!r.ok||j.error)throw new Error(j.error||('Kode '+r.status));
+  var r=applyScan(j);
+  if(!r.n)smsg('Tidak ada data yang terbaca dari foto. Coba foto lebih jelas.',1);
+  else if(r.total>1)scanBanner();
+  else smsg(r.total===1?'Terisi dari foto. Periksa dulu sebelum menyimpan.':'Hanya data umum yang terbaca, tidak ada barang. Isi barang secara manual.');
+ }catch(e){smsg('Gagal membaca foto: '+(e.message||e),1)}
+ b.disabled=false;b.innerHTML=t0};
 var COPIES=3; // jumlah salinan otomatis untuk printer manika
 $('#l360').onclick=function(){if(!isAdmin)return;save().then(function(ok){if(ok){render();
  var h=toHtml(RAW.replace(/\s+$/,'')),pgs=[];for(var i=1;i<=COPIES;i++)pgs.push('<div'+(i<COPIES?' style="break-after:page;page-break-after:always"':'')+'>'+h+'</div>');$('#prp').innerHTML=pgs.join(''); // satu halaman A4 per salinan
  document.getElementById('pgs').textContent='@page{size:A4 portrait;margin:12mm 15mm}@media print{#pr pre{font:11.5pt/14.5pt "Courier New",Courier,monospace;padding-left:0}}'; // kertas A4 untuk printer inkjet Epson L360
  window.print();markPrinted()}})};
-$('#save').onclick=function(){save().then(function(ok){if(ok){var n=cur;showHome();toast('Tersimpan: surat jalan no. '+n+'.')}})};
-$('#newbtn').onclick=fresh;$('#back').onclick=showHome;
+$('#save').onclick=function(){save().then(function(ok){if(ok){var n=cur;
+ if(SCANQ.length){loadNextScan(n);return}
+ SCANN=0;showHome();toast('Tersimpan: surat jalan no. '+n+'.')}})};
+$('#newbtn').onclick=fresh;$('#back').onclick=function(){if(SCANQ.length&&!confirm('Masih ada '+SCANQ.length+' surat jalan dari foto yang belum dibuat. Tetap kembali?'))return;SCANQ=[];SCANN=0;showHome()};
 $('#lg').onclick=loginClick;$('#tm').onclick=toggleTheme;
 $('#q').addEventListener('input',drawHist);
 $('#bell').onclick=openNP;$('#npx').onclick=closeNP;
