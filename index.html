@@ -318,8 +318,8 @@ function applyRole(){var on=isAdmin;$('#usb').style.display=$('#l360').style.dis
 function setAdmin(h){isAdmin=!!h;try{if(h)localStorage.setItem('sj_adm',h);else localStorage.removeItem('sj_adm')}catch(e){}applyRole()}
 function sha(s){return crypto.subtle.digest('SHA-256',new TextEncoder().encode('sj-v1:'+s)).then(function(b){return Array.prototype.map.call(new Uint8Array(b),function(x){return('0'+x.toString(16)).slice(-2)}).join('')})}
 function askPass(title,twice){return new Promise(function(res){
- $('#dtl').textContent=title;$('#dp').value='';$('#dp2').value='';$('#derr').textContent='';$('#dp2w').style.display=twice?'':'none';$('#dlg').style.display='flex';$('#dp').focus();
- function done(v){$('#dlg').style.display='none';$('#dok').onclick=null;$('#dcn').onclick=null;res(v)}
+ $('#dtl').textContent=title;$('#dp').value='';$('#dp2').value='';$('#derr').textContent='';$('#dp2w').style.display=twice?'':'none';$('#dlg').style.display='flex';navPush('dlg');$('#dp').focus();
+ function done(v){$('#dlg').style.display='none';navClose('dlg');$('#dok').onclick=null;$('#dcn').onclick=null;res(v)}
  $('#dcn').onclick=function(){done(null)};
  $('#dok').onclick=function(){var a=$('#dp').value;if(!a){$('#derr').textContent='Password tidak boleh kosong.';return}if(twice&&a!==$('#dp2').value){$('#derr').textContent='Kedua password tidak sama.';return}done(a)};
 })}
@@ -339,8 +339,28 @@ async function loginClick(){
 function markPrinted(){if(db&&cur)db.from('suratjalan').update({printed:true,printed_at:Date.now()}).eq('no',cur).eq('periode',curP).then(function(){loadHist().catch(function(){})},function(){})}
 function gdVis(){var s=$('#drs'),i=$('#dr');$('#gdw').style.display=(s.value==='PBM'||(s.value==='X'&&/\bPBM\b/i.test(i.value)))?'':'none'}
 function toast(t){var e=$('#toast');e.textContent=t;e.style.display='block'}
-function showHome(){$('#home').style.display='';$('#editor').style.display='none';drawHist();window.scrollTo(0,0)}
-function showEditor(){$('#toast').style.display='none';$('#home').style.display='none';$('#editor').style.display='';applyLock();render();window.scrollTo(0,0)}
+
+// === Tombol kembali HP: tutup panel/halaman satu per satu, jangan langsung keluar ===
+var NAV=[],NAVQ=0,NAVAFTER=null,exitT=null;
+function exitMsg(){var m=document.getElementById('exitmsg');if(!m){m=document.createElement('div');m.id='exitmsg';m.style.cssText='display:none;position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 24px);transform:translateX(-50%);background:rgba(0,0,0,.82);color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;z-index:60;text-align:center;max-width:90%';document.body.appendChild(m)}return m}
+function navPush(k){
+ if(!NAV.length){clearTimeout(exitT);exitMsg().style.display='none';NAV.push('home');history.pushState({k:'home'},'')}
+ NAV.push(k);history.pushState({k:k},'')}
+function navClose(k,cb){
+ if(NAV[NAV.length-1]===k){NAV.pop();NAVQ++;if(typeof cb==='function')NAVAFTER=cb;history.back()}
+ else if(typeof cb==='function')cb()}
+function exitGuard(){
+ var m=exitMsg();m.textContent='Tekan tombol kembali sekali lagi untuk keluar';m.style.display='block';
+ clearTimeout(exitT);exitT=setTimeout(function(){m.style.display='none';if(!NAV.length){NAV.push('home');history.pushState({k:'home'},'')}},2000)}
+window.addEventListener('popstate',function(){
+ if(NAVQ>0){NAVQ--;if(NAVQ===0&&NAVAFTER){var f=NAVAFTER;NAVAFTER=null;f()}return}
+ var k=NAV.pop();
+ if(k==='dlg'){var c=$('#dcn').onclick;if(c)c()}
+ else if(k==='np')closeNP()
+ else if(k==='edit')showHome()
+ else if(k==='home')exitGuard()});
+function showHome(){navClose('edit');$('#home').style.display='';$('#editor').style.display='none';drawHist();window.scrollTo(0,0)}
+function showEditor(){if(NAV[NAV.length-1]!=='edit')navPush('edit');$('#toast').style.display='none';$('#home').style.display='none';$('#editor').style.display='';applyLock();render();window.scrollTo(0,0)}
 function pad4(n){return ('0000'+n).slice(-4)}
 function today(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
 
@@ -364,15 +384,15 @@ function drawNotif(){
  bell.style.display='';bb.style.display=n?'':'none';bb.textContent=n>99?'99+':n;
  document.title=(n?'('+n+') ':'')+baseTitle;
  if($('#npw').style.display==='block')drawNP()}
-function openNP(){$('#npw').style.display='block';drawNP()}
-function closeNP(){$('#npw').style.display='none'}
+function openNP(){if(NAV[NAV.length-1]!=='np')navPush('np');$('#npw').style.display='block';drawNP()}
+function closeNP(cb){$('#npw').style.display='none';if(NAV[NAV.length-1]==='np')navClose('np',cb);else if(typeof cb==='function')cb()}
 function drawNP(){
  var l=$('#npl');l.innerHTML='';var a=HIST.filter(isNewDoc);
  if(!a.length)l.innerHTML='<p class="note">Tidak ada surat jalan baru.</p>';
  a.forEach(function(d){var b=document.createElement('button');b.type='button';
   b.style.cssText='display:block;width:100%;text-align:left;margin-top:8px;font-weight:400;line-height:1.4;padding:10px 12px;white-space:pre-line;border-left:6px solid #2980b9';
   b.textContent='🆕 '+d.no+' — '+(d.pw||'tanpa pengawas')+' ('+fmtDate(d.dt)+')\nDibawa ke: '+(d.dk||'-')+'  |  SPK: '+(d.sp||'-');
-  b.onclick=function(){closeNP();cur=d.no;curP=d.periode;setData(d);showEditor()};l.appendChild(b)});
+  b.onclick=function(){closeNP(function(){cur=d.no;curP=d.periode;setData(d);showEditor()})};l.appendChild(b)});
  $('#npr').style.display=(a.length&&isAdmin)?'':'none';
  $('#npn').style.display=(isAdmin&&window.Notification&&Notification.permission==='default')?'':'none'}
 async function markAllRead(){
@@ -479,7 +499,7 @@ async function save(){
 }
 function fresh(){
  var d=getData(),n=parseInt(d.no,10);
- cur='';curP='';d.no='';d.dt=today();d.nm='';d.pt='';d.sp='';d.dr='';d.dk='';d.items=[{}];
+ cur='';curP='';d.no='';d.dt=today();d.nm='';d.pt='';d.sp='';d.dr='';d.dk='';d.pw='';d.gd='';d.pk='';d.pn='';d.items=[{}];
  setData(d);msg('');showEditor()}
 
 $('#sp').addEventListener('input',function(){var v=this.value.replace(/\D/g,'');if(v!==this.value)this.value=v});
@@ -533,6 +553,7 @@ if(!$('#jd').value)$('#jd').value=JD;
  }).catch(function(){clearTimeout(t);db=null;dbState='failed';drawHist()});
 })();
 initIcons();initTheme();applyRole();loadDr();render();drawHist();showHome();
+history.replaceState({k:'base'},'');history.pushState({k:'home'},'');NAV=['home'];
 </script>
 </body>
 </html>
