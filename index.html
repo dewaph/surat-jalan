@@ -139,6 +139,7 @@ mark{background:#ffe066;color:#000;border-radius:2px;padding:0 1px}
 <div class="row">
 <button class="print" id="usb" type="button">🖨️ Cetak langsung via USB</button>
 <button class="dark" id="prt" type="button">🌐 Cetak lewat browser</button>
+<button class="dark" id="l310" type="button">🖨️ Cetak ke Epson L310 (A4)</button>
 </div>
 <div class="msg" id="msg" role="status"></div>
 
@@ -242,7 +243,7 @@ function toBytes(text,len,draft,ml,bold){
   if(/^─+$/.test(l)){b.push(0x1b,0x2d,1);for(var k=0;k<l.length;k++)b.push(0x20);b.push(0x1b,0x2d,0)} // garis penuh: spasi bergaris-bawah
   else for(var i=0;i<l.length;i++){var c=l.charCodeAt(i);b.push(c<128?c:63)}
   b.push(13,10)});
- b.push(0x0c,0x1b,0x40); // form feed lalu reset printer ke kondisi normal
+ b.push(0x1b,0x43,0,22,0x0c,0x1b,0x40); // panjang halaman 22 inci lalu form feed: kertas terus maju sampai sensor paper-out; terakhir reset printer
  return new Uint8Array(b);
 }
 var UD=null,UEP=null,UIF=null;
@@ -314,7 +315,7 @@ function applyLock(){var lock=!!cur&&!isAdmin;
  document.querySelectorAll('#editor details').forEach(function(d){d.style.display=lock?'none':''});
 
  $('#locknote').style.display=lock?'block':'none'}
-function applyRole(){var on=isAdmin;$('#usb').style.display=$('#prt').style.display=on?'':'none';setBtn('lg',on?'out':'key',on?'Keluar':'Login');applyLock();drawHist()}
+function applyRole(){var on=isAdmin;$('#usb').style.display=$('#prt').style.display=$('#l310').style.display=on?'':'none';setBtn('lg',on?'out':'key',on?'Keluar':'Login');applyLock();drawHist()}
 function setAdmin(h){isAdmin=!!h;try{if(h)localStorage.setItem('sj_adm',h);else localStorage.removeItem('sj_adm')}catch(e){}applyRole()}
 function sha(s){return crypto.subtle.digest('SHA-256',new TextEncoder().encode('sj-v1:'+s)).then(function(b){return Array.prototype.map.call(new Uint8Array(b),function(x){return('0'+x.toString(16)).slice(-2)}).join('')})}
 function askPass(title,twice){return new Promise(function(res){
@@ -492,6 +493,9 @@ $('#items').addEventListener('click',function(e){
   if(!document.querySelector('.item'))itemRow();render()}});
 $('#drs').addEventListener('change',syncDr);
 $('#usb').onclick=function(){if(!isAdmin)return;save().then(function(ok){if(ok)usbPrint()})};
+$('#l310').onclick=function(){if(!isAdmin)return;save().then(function(ok){if(ok){render();
+ document.getElementById('pgs').textContent='@page{size:A4 portrait;margin:12mm 15mm}@media print{#pr pre{font:11.5pt/14.5pt "Courier New",Courier,monospace;padding-left:0}}'; // kertas A4 untuk printer inkjet Epson L310
+ window.print();markPrinted()}})};
 $('#prt').onclick=function(){if(!isAdmin)return;save().then(function(ok){if(ok){render();window.print();markPrinted()}})};
 $('#save').onclick=function(){save().then(function(ok){if(ok){var n=cur;showHome();toast('Tersimpan: surat jalan no. '+n+'.')}})};
 $('#newbtn').onclick=fresh;$('#back').onclick=showHome;
