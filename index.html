@@ -86,7 +86,7 @@ mark{background:#ffe066;color:#000;border-radius:2px;padding:0 1px}
 
 <div id="editor" style="display:none">
 <div class="row" style="margin:0 0 10px"><button class="gray" id="back" type="button">⬅️ Kembali ke daftar</button></div>
-<div class="row" id="scanrow" style="margin:0 0 6px"><button class="p" id="scanbtn" type="button">📷 Isi dari foto nota</button><input id="scanf" type="file" accept="image/*" style="display:none"></div>
+<div class="row" id="scanrow" style="margin:0 0 6px"><button class="p" id="scancam" type="button">📷 Foto langsung</button><button class="p" id="scangal" type="button">🖼️ Pilih dari galeri</button><input id="scanfc" type="file" accept="image/*" capture="environment" style="display:none"><input id="scanfg" type="file" accept="image/*" style="display:none"></div>
 <p class="note" id="scanmsg" style="display:none;margin:0 0 10px"></p>
 <p class="note" id="locknote" style="display:none;margin:0 0 10px">Hubungi admin untuk mengubah atau mencetak surat jalan</p>
 
@@ -558,21 +558,24 @@ function loadNextScan(n){
 function scanBanner(pre){
  var done=SCANN-SCANQ.length;
  smsg((pre||'')+'Surat '+done+' dari '+SCANN+' (dari foto): '+($('#dr').value||'-')+' → '+($('#dk').value||'-')+'. Periksa lalu simpan, surat berikutnya otomatis terbuka.')}
-$('#scanbtn').onclick=function(){$('#scanf').click()};
-$('#scanf').onchange=async function(){
- var f=this.files&&this.files[0];this.value='';if(!f)return;
- var b=$('#scanbtn'),t0=b.innerHTML;b.disabled=true;b.textContent='⏳ Membaca foto...';smsg('');
+async function scanFile(f){
+ if(!f)return;
+ var bs=[$('#scancam'),$('#scangal')],t0=bs.map(function(x){return x.innerHTML});
+ bs.forEach(function(x){x.disabled=true});$('#scancam').textContent='⏳ Membaca foto...';smsg('');
  try{
   var img=await shrinkImg(f);
-  var r=await fetch(SB_URL+'/functions/v1/scan-nota',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_JWT,'apikey':SB_JWT},body:JSON.stringify(img)});
-  var j=await r.json().catch(function(){return {}});
-  if(!r.ok||j.error)throw new Error(j.error||('Kode '+r.status));
+  var resp=await fetch(SB_URL+'/functions/v1/scan-nota',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_JWT,'apikey':SB_JWT},body:JSON.stringify(img)});
+  var j=await resp.json().catch(function(){return {}});
+  if(!resp.ok||j.error)throw new Error(j.error||('Kode '+resp.status));
   var r=applyScan(j);
   if(!r.n)smsg('Tidak ada data yang terbaca dari foto. Coba foto lebih jelas.',1);
   else if(r.total>1)scanBanner();
   else smsg(r.total===1?'Terisi dari foto. Periksa dulu sebelum menyimpan.':'Hanya data umum yang terbaca, tidak ada barang. Isi barang secara manual.');
  }catch(e){smsg('Gagal membaca foto: '+(e.message||e),1)}
- b.disabled=false;b.innerHTML=t0};
+ bs.forEach(function(x,i){x.disabled=false;x.innerHTML=t0[i]})}
+$('#scancam').onclick=function(){$('#scanfc').click()};
+$('#scangal').onclick=function(){$('#scanfg').click()};
+['scanfc','scanfg'].forEach(function(id){$('#'+id).onchange=function(){var f=this.files&&this.files[0];this.value='';scanFile(f)}});
 var COPIES=3; // jumlah salinan otomatis untuk printer manika
 $('#l360').onclick=function(){if(!isAdmin)return;save().then(function(ok){if(ok){render();
  var h=toHtml(RAW.replace(/\s+$/,'')),pgs=[];for(var i=1;i<=COPIES;i++)pgs.push('<div'+(i<COPIES?' style="break-after:page;page-break-after:always"':'')+'>'+h+'</div>');$('#prp').innerHTML=pgs.join(''); // satu halaman A4 per salinan
