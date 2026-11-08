@@ -449,7 +449,7 @@ async function toggleKembali(d){
 function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
 var SEL='periode,no,seq,doc,printed,created_at,dibaca,kembali';
 function rowToDoc(r){var d=r.doc||{};d.no=r.no;d.periode=r.periode;d.seq=r.seq;d.dibaca=!!r.dibaca;d.created_at=Number(r.created_at)||0;d.printed=!!r.printed;d.kembali=!!r.kembali;return d}
-async function loadHist(){var r=await db.from('suratjalan').select(SEL).order('periode',{ascending:false}).order('seq',{ascending:false}).limit(1000);if(r.error)throw r.error;HIST=r.data.map(rowToDoc);drawHist()}
+async function loadHist(){var all=[],from=0,PG=1000;while(true){var r=await db.from('suratjalan').select(SEL).order('periode',{ascending:false}).order('seq',{ascending:false}).range(from,from+PG-1);if(r.error)throw r.error;all=all.concat(r.data);if(r.data.length<PG)break;from+=PG}HIST=all.map(rowToDoc);drawHist()}
 async function loadCfg(){var r=await db.from('sj_config').select('key,value').in('key',['admin','counter']);if(r.error)return;
  var a=null,st=1;r.data.forEach(function(x){if(x.key==='admin')a=(x.value&&x.value.hash)||null;if(x.key==='counter'){var v=Number(x.value&&x.value.start);st=v>0?v:1}});
  ADM_HASH=a;START=st;var h='';try{h=localStorage.getItem('sj_adm')||''}catch(e){}setAdmin(h&&h===ADM_HASH?h:null)}
