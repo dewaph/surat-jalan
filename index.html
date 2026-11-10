@@ -4,156 +4,1191 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Surat Jalan Keluar Barang</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f3f4f1;--card:#fff;--fg:#1c2330;--mut:#667085;--line:#d5d9e0;--ac:#24479b;--acfg:#fff;--paper:#fff;--ink:#14213d;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161d;--card:#1b212b;--fg:#e8ebf0;--mut:#9aa4b2;--line:#323b49;--ac:#7f9bea;--acfg:#0c1220;--paper:#f6f5ef;--ink:#14213d}}
-:root[data-theme="dark"]{--bg:#12161d;--card:#1b212b;--fg:#e8ebf0;--mut:#9aa4b2;--line:#323b49;--ac:#7f9bea;--acfg:#0c1220;--paper:#f6f5ef;--ink:#14213d}
-*{box-sizing:border-box}
-:root{color-scheme:light dark}
-:root[data-theme="light"]{color-scheme:light}
-:root[data-theme="dark"]{color-scheme:dark}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 "Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
-main{max-width:760px;margin:0 auto;padding:14px}
-h1{font-size:22px;margin:6px 0 2px}
-h2{font-size:16px;margin:0 0 10px;color:var(--ac)}
-.sub{color:var(--mut);margin:0 0 14px}
-section{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:12px}
-label{display:block;font-size:13px;color:var(--mut);margin-bottom:3px}
-input,textarea,select{width:100%;font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:9px}
-input:focus,select:focus,button:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
-.g{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.g .w{grid-column:1/-1}
-.item{border-top:1px dashed var(--line);padding-top:10px;margin-top:10px;display:grid;grid-template-columns:1fr 80px 90px;gap:8px}
-.item .n{grid-column:1/-1}
-#items{counter-reset:it}
-.item{counter-increment:it}
-.item::before{content:"Barang " counter(it);grid-column:1/-1;font-weight:600;color:var(--ac)}
-.item .k{grid-column:1/-1}
-.item button{align-self:end}
-button{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:10px;padding:11px 16px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.1);transition:transform .08s,box-shadow .15s,filter .15s}
-button:hover{box-shadow:0 3px 8px rgba(0,0,0,.18);filter:brightness(1.06)}
-button:active{transform:translateY(1px);box-shadow:none}
-button:disabled{opacity:.55;cursor:not-allowed}
-button svg{width:1.15em;height:1.15em;vertical-align:-.2em;margin-right:7px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-#tm svg{margin-right:0}
-#usb{font-size:17px;padding:14px 16px}
-button.p{background:linear-gradient(180deg,var(--ac),var(--ac));color:var(--acfg);border-color:var(--ac)}
-button.add{background:linear-gradient(180deg,#2bb066,#1f8a4c);border-color:#1f8a4c;color:#fff}
-button.del{background:linear-gradient(180deg,#dd5b51,#c0392b);border-color:#c0392b;color:#fff}
-button.lg{background:linear-gradient(180deg,#8b6cf7,#6246d9);border-color:#6246d9;color:#fff}
-button.teal{background:linear-gradient(180deg,#2bb3a6,#1b8f84);border-color:#1b8f84;color:#fff}
-button.gray{background:linear-gradient(180deg,#667085,#475467);border-color:#475467;color:#fff}
-button.print{background:linear-gradient(180deg,#f5a03a,#d9730d);border-color:#d9730d;color:#fff}
-button.dark{background:linear-gradient(180deg,#475569,#2f3b4c);border-color:#2f3b4c;color:#fff}
-.row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.row>*{flex:1 1 150px}
-.sheet{background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:12px;overflow-x:auto}
-/* garis penuh: lebar dihitung dengan satuan ch agar sama persis dengan lebar teks */
-.hr{display:inline-block;height:0;border-bottom:1.5px solid currentColor;vertical-align:.3em}
-pre{margin:0;font:11px/1.25 "Courier New",Courier,monospace;white-space:pre}
-.note{font-size:13px;color:var(--mut);margin:8px 0 0}
-.msg{font-size:14px;margin-top:8px;min-height:20px}
-.hist button{display:block;width:100%;text-align:left;margin-top:8px;font-weight:400;line-height:1.4;padding:11px 14px}
-.err{border-color:#c0392b!important;outline:2px solid #c0392b}
-mark{background:#ffe066;color:#000;border-radius:2px;padding:0 1px}
-#pr{display:none}
-@media print{
- body{background:#fff}
- main{display:none!important}
- #pr{display:block}
- #pr pre{font:11pt/12pt "Courier New",Courier,monospace;color:#000;margin:0}
- :root{padding:0}
+:root {
+  --bg: #f1f5f9;
+  --bg-accent: radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 50%), radial-gradient(at 100% 0%, rgba(14, 165, 233, 0.08) 0px, transparent 50%);
+  --card: #ffffff;
+  --card-alt: #f8fafc;
+  --fg: #0f172a;
+  --mut: #64748b;
+  --line: #e2e8f0;
+  --ac: #4f46e5;
+  --ac-light: rgba(79, 70, 229, 0.1);
+  --acfg: #ffffff;
+  --paper: #ffffff;
+  --ink: #0f172a;
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.04);
+  --shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05), 0 8px 10px -6px rgba(15, 23, 42, 0.03);
+  --shadow-lg: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
+  --radius: 18px;
+  --radius-sm: 12px;
+  box-sizing: border-box;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #090d16;
+    --bg-accent: radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%), radial-gradient(at 100% 0%, rgba(14, 165, 233, 0.1) 0px, transparent 50%);
+    --card: #111827;
+    --card-alt: #1e293b;
+    --fg: #f8fafc;
+    --mut: #94a3b8;
+    --line: #1f2937;
+    --ac: #6366f1;
+    --ac-light: rgba(99, 102, 241, 0.15);
+    --acfg: #ffffff;
+    --paper: #f8fafc;
+    --ink: #0f172a;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #090d16;
+  --bg-accent: radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%), radial-gradient(at 100% 0%, rgba(14, 165, 233, 0.1) 0px, transparent 50%);
+  --card: #111827;
+  --card-alt: #1e293b;
+  --fg: #f8fafc;
+  --mut: #94a3b8;
+  --line: #1f2937;
+  --ac: #6366f1;
+  --ac-light: rgba(99, 102, 241, 0.15);
+  --acfg: #ffffff;
+  --paper: #f8fafc;
+  --ink: #0f172a;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 80px);
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  background-image: var(--bg-accent);
+  background-attachment: fixed;
+  color: var(--fg);
+  font: 14.5px/1.55 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  min-height: 100dvh;
+  -webkit-tap-highlight-color: transparent;
+}
+button, select { touch-action: manipulation; }
+.g > *, .item > * { min-width: 0; }
+
+/* Navbar Modern */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--line);
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 20px 12px;
+}
+
+:root[data-theme="dark"] .navbar {
+  background: rgba(17, 24, 39, 0.78);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .navbar {
+    background: rgba(17, 24, 39, 0.78);
+  }
+}
+
+.nav-container {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.brand-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #4f46e5, #06b6d4);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+}
+
+.brand-logo svg {
+  width: 22px;
+  height: 22px;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  fill: none;
+}
+
+.brand-text h1 {
+  font-size: 16px;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.brand-text span {
+  font-size: 11.5px;
+  color: var(--mut);
+  font-weight: 500;
+  display: block;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+main {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px 16px 60px;
+}
+
+/* Dashboard Hero & Stats */
+.dashboard-top {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.stat-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex: none;
+}
+
+.stat-info {
+  min-width: 0;
+}
+
+.stat-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mut);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stat-val {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--fg);
+  line-height: 1.2;
+  margin-top: 2px;
+}
+
+/* Toolbar & Filter */
+.toolbar-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.toolbar-grid {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 10px;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .toolbar-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .toolbar-grid .search-wrap {
+    grid-column: 1 / -1;
+  }
+  .toolbar-grid #newbtn {
+    grid-column: 1 / -1;
+    order: -1;
+  }
+}
+
+.search-wrap {
+  position: relative;
+}
+
+.search-wrap svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  stroke: var(--mut);
+  fill: none;
+  stroke-width: 2;
+  pointer-events: none;
+}
+
+input#q {
+  padding-left: 40px;
+}
+
+/* Section & Cards */
+section {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow);
+}
+
+h2 {
+  font-size: 15.5px;
+  font-weight: 700;
+  margin: 0 0 16px;
+  color: var(--fg);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: -0.01em;
+}
+
+h2 .sec-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--ac-light);
+  color: var(--ac);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+/* Split Layout for Editor */
+.editor-layout {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.editor-Preview-sticky {
+  position: sticky;
+  top: 84px;
+}
+
+@media (max-width: 960px) {
+  .editor-layout {
+    grid-template-columns: 1fr;
+  }
+  .editor-Preview-sticky {
+    position: static;
+  }
+}
+
+/* Form Controls */
+label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--mut);
+  margin-bottom: 6px;
+}
+
+input, textarea, select {
+  width: 100%;
+  font: inherit;
+  color: var(--fg);
+  background: var(--card-alt);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  transition: all 0.18s ease;
+}
+
+input:hover, select:hover {
+  border-color: #94a3b8;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--ac);
+  background: var(--card);
+  box-shadow: 0 0 0 4px var(--ac-light);
+}
+
+.g {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.g .w {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 540px) {
+  .g {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Item Rows */
+#items {
+  counter-reset: it;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.item {
+  counter-increment: it;
+  background: var(--card-alt);
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 1fr 110px 120px;
+  gap: 12px;
+  position: relative;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.item:focus-within {
+  border-color: var(--ac);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 540px) {
+  .item {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.item::before {
+  content: "ITEM NO. " counter(it);
+  grid-column: 1 / -1;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--ac);
+  background: var(--ac-light);
+  justify-self: start;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.item .n, .item .k {
+  grid-column: 1 / -1;
+}
+
+.item input {
+  background: var(--card);
+}
+
+/* Buttons */
+button {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--fg);
+  border-radius: var(--radius-sm);
+  padding: 11px 18px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1.5px);
+  box-shadow: var(--shadow);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+button svg {
+  width: 1.2em;
+  height: 1.2em;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+#tm, #bell {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 12px;
+  background: var(--card-alt);
+}
+
+button.p {
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+button.add {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #059669;
+}
+:root[data-theme="dark"] button.add { color: #34d399; }
+
+button.del {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #dc2626;
+}
+:root[data-theme="dark"] button.del { color: #f87171; }
+
+button.lg {
+  background: var(--fg);
+  color: var(--card);
+  border-color: transparent;
+}
+
+button.gray {
+  background: var(--card);
+  border-color: var(--line);
+  color: var(--fg);
+}
+
+button.print {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+button.dark {
+  background: linear-gradient(135deg, #334155, #1e293b);
+  border-color: transparent;
+  color: #fff;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.row > * {
+  flex: 1 1 150px;
+}
+
+/* Paper Preview Realistic */
+.sheet-container {
+  background: #cbd5e1;
+  padding: 16px;
+  border-radius: 14px;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+:root[data-theme="dark"] .sheet-container {
+  background: #060911;
+}
+
+.sheet {
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 6px;
+  padding: 18px 16px;
+  overflow-x: auto;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  border-top: 4px dashed #94a3b8;
+  border-bottom: 4px dashed #94a3b8;
+}
+
+.hr {
+  display: inline-block;
+  height: 0;
+  border-bottom: 1.5px solid currentColor;
+  vertical-align: 0.3em;
+}
+
+pre {
+  margin: 0;
+  font: 11px/1.28 "Courier New", Courier, monospace;
+  white-space: pre;
+}
+
+.note {
+  font-size: 13px;
+  color: var(--mut);
+  margin: 8px 0 0;
+}
+
+.msg {
+  font-size: 13.5px;
+  font-weight: 600;
+  margin-top: 10px;
+  min-height: 20px;
+}
+
+/* Modern History Cards Grid */
+.hist-month-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 26px 0 12px;
+  padding: 0 4px;
+}
+
+.hist-month-title {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--mut);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hist-month-title::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ac);
+}
+
+.hist-month-count {
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--card);
+  border: 1px solid var(--line);
+  padding: 3px 10px;
+  border-radius: 999px;
+  color: var(--mut);
+}
+
+.sj-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.sj-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+  border-color: var(--ac);
+}
+
+.sj-card-body {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 18px 20px 14px;
+  display: block;
+  font-weight: 400;
+  border-radius: 0;
+}
+
+.sj-card-body:hover:not(:disabled) {
+  transform: none;
+  box-shadow: none;
+}
+
+.sj-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.sj-no-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sj-no {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ac);
+  background: var(--ac-light);
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.sj-new-badge {
+  background: #ef4444;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+}
+
+.sj-date {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mut);
+}
+
+.sj-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  padding: 12px;
+  background: var(--card-alt);
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.sj-meta-item {
+  min-width: 0;
+}
+
+.sj-meta-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--mut);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.sj-meta-val {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sj-items-box {
+  font-size: 13px;
+  color: var(--fg);
+  line-height: 1.5;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.sj-Card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  background: var(--card-alt);
+  border-top: 1px solid var(--line);
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sj-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  letter-spacing: 0.03em;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.pill-green {
+  background: rgba(16, 185, 129, 0.14);
+  color: #059669;
+}
+:root[data-theme="dark"] .pill-green { color: #34d399; }
+
+.pill-red {
+  background: rgba(239, 68, 68, 0.14);
+  color: #dc2626;
+}
+:root[data-theme="dark"] .pill-red { color: #f87171; }
+
+.pill-amber {
+  background: rgba(245, 158, 11, 0.15);
+  color: #d97706;
+}
+:root[data-theme="dark"] .pill-amber { color: #fbbf24; }
+
+.err {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15) !important;
+}
+
+mark {
+  background: #fde047;
+  color: #713f12;
+  border-radius: 4px;
+  padding: 0 3px;
+  font-weight: 700;
+}
+
+/* Modals */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 50;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.modal-box {
+  background: var(--card);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 26px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: var(--shadow-lg);
+}
+
+#pr {
+  display: none;
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
+  .navbar, main {
+    display: none !important;
+  }
+  #pr {
+    display: block;
+  }
+  #pr pre {
+    font: 11pt/12pt "Courier New", Courier, monospace;
+    color: #000;
+    margin: 0;
+  }
+  :root {
+    padding: 0;
+  }
+}
+
+/* ===== Perbaikan tampilan mobile ===== */
+@media (hover: none) {
+  button:hover:not(:disabled), .sj-card:hover, .stat-card:hover { transform: none; }
+  .sj-card:hover { border-color: var(--line); box-shadow: var(--shadow-sm); }
+}
+.brand-text { min-width: 0; }
+.brand-text h1, .brand-text span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+@media (max-width: 640px) {
+  body { background-attachment: scroll; }
+  .navbar { padding: calc(10px + env(safe-area-inset-top, 0px)) 12px 10px; }
+  .brand { gap: 10px; }
+  .brand-logo { width: 36px; height: 36px; border-radius: 10px; }
+  .nav-actions { gap: 6px; flex: none; }
+  #tm, #bell { width: 44px; height: 44px; }
+  #lg { padding: 0 12px !important; min-height: 44px; }
+  main { padding: 14px 12px 40px; }
+
+  /* Ringkasan: 3 kolom ringkas, bukan 3 kartu bertumpuk */
+  .dashboard-top { grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+  .stat-card { flex-direction: column; text-align: center; gap: 6px; padding: 12px 6px; }
+  .stat-icon { width: 36px; height: 36px; border-radius: 11px; font-size: 17px; }
+  .stat-label { font-size: 10px; letter-spacing: 0.02em; line-height: 1.25; }
+  .stat-val { font-size: 20px; }
+
+  .toolbar-card { padding: 12px; margin-bottom: 14px; }
+  section { padding: 16px 14px; margin-bottom: 14px; }
+  h2 { font-size: 15px; margin-bottom: 14px; }
+
+  /* Form: 16px mencegah iOS zoom otomatis, tinggi ≥44px untuk jempol */
+  input, select, textarea { font-size: 16px; min-height: 46px; padding: 10px 12px; }
+  input[type="date"] { -webkit-appearance: none; appearance: none; text-align: left; }
+  button { min-height: 44px; }
+  .item { padding: 14px 12px; gap: 10px; }
+  .row > * { flex: 1 1 100%; }
+
+  /* Kartu riwayat */
+  .sj-card-body { padding: 14px 14px 12px; }
+  .sj-meta-grid { grid-template-columns: 1fr 1fr; padding: 10px; gap: 10px 12px; }
+  .sj-meta-grid .sj-meta-item:nth-child(1) { order: 1; }
+  .sj-meta-grid .sj-meta-item:nth-child(3) { order: 2; }
+  .sj-meta-grid .sj-meta-item:nth-child(2) { order: 3; grid-column: 1 / -1; }
+  .sj-meta-grid .sj-meta-item:nth-child(4) { order: 4; grid-column: 1 / -1; }
+  .sj-meta-val { white-space: normal; overflow-wrap: anywhere; }
+  .sj-Card-footer { flex-direction: column; align-items: stretch; padding: 12px 14px; }
+  .sj-Card-footer > button { width: 100%; min-height: 40px; }
+  .hist-month-header { margin-top: 20px; }
+
+  /* Pratinjau kertas: geser horizontal di dalam kotaknya */
+  .sheet-container { padding: 8px; }
+  .sheet { padding: 12px 10px; -webkit-overflow-scrolling: touch; }
+  pre { font-size: 10.5px; }
+
+  /* Popover & dialog */
+  #np { left: 12px !important; right: 12px !important; padding: 16px !important; max-height: 80vh; max-height: 80dvh !important; }
+  .modal-overlay { padding: 12px; }
+  .modal-box { padding: 20px; max-height: 90dvh; overflow: auto; }
+}
+@media (max-width: 400px) {
+  .brand-text span { display: none; }
+  .brand-text h1 { font-size: 15px; }
+}
+@media (max-width: 360px) {
+  .brand-logo { display: none; }
+}
+
+/* Pagination */
+.pager{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:18px 0 6px}
+.pager button{flex:1 1 0;max-width:150px;padding:10px 8px;font-size:13px}
+.pager-info{flex:1 1 auto;text-align:center;font-size:13px;font-weight:700;color:var(--fg);line-height:1.4}
+.pager-info span{color:var(--mut);font-size:11.5px}
+@media (max-width: 640px) {
+  .pager button{min-height:40px}
+  /* Form surat baru: lebih ringkas */
+  #editor input,#editor select{font-size:14px;min-height:40px;padding:8px 10px;border-radius:10px}
+  #editor label{font-size:11.5px;margin-bottom:4px}
+  #editor .g{gap:10px}
+  #editor section{padding:14px 12px;margin-bottom:12px}
+  #editor h2{font-size:14px;margin-bottom:12px}
+  #editor .sec-badge{width:24px;height:24px;font-size:12px}
+  #editor .item{padding:10px;gap:8px;border-radius:12px}
+  #editor .item::before{font-size:10px;padding:2px 8px}
+  #editor button{min-height:38px;padding:8px 12px;font-size:13.5px}
+  #editor .row{gap:8px;margin-top:10px}
+  #editor #save{padding:11px !important}
+}
+
+/* Cegah kartu/form melebar melebihi layar */
+.editor-layout{grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr)}
+.editor-forms,.editor-Preview-sticky,#items,.item,section{min-width:0;max-width:100%}
+.g{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+select{min-width:0;text-overflow:ellipsis}
+@media (max-width: 960px){.editor-layout{grid-template-columns:minmax(0,1fr)}}
+@media (max-width: 640px){
+  .g{grid-template-columns:minmax(0,1fr)}
+  .item{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 }
 </style>
 </head>
 <body>
+
+<header class="navbar">
+  <div class="nav-container">
+    <div class="brand">
+      <div class="brand-logo">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </div>
+      <div class="brand-text">
+        <h1>E-Surat Jalan</h1>
+        <span>Manika Stone Art & Bangunan</span>
+      </div>
+    </div>
+    <div class="nav-actions">
+      <button id="bell" type="button" aria-label="Notifikasi" style="display:none;position:relative">
+        🔔<span id="bb" style="display:none;position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;line-height:19px;border-radius:999px;background:#ef4444;color:#fff;font-size:11px;font-weight:800;text-align:center;padding:0 5px;border:2px solid var(--card)"></span>
+      </button>
+      <button id="tm" type="button"></button>
+      <button id="lg" class="lg" type="button" style="padding:9px 16px;font-size:13px;border-radius:12px">🔑 Login</button>
+    </div>
+  </div>
+</header>
+
 <main>
-<div style="display:flex;align-items:center;gap:8px"><h1 style="font-size:19px;flex:1;min-width:0">Surat jalan keluar barang</h1><div style="display:flex;gap:6px;margin-left:auto;flex:none"><button id="bell" type="button" aria-label="Notifikasi" style="display:none;position:relative;padding:7px 11px;border-radius:999px">🔔<span id="bb" style="display:none;position:absolute;top:-6px;right:-4px;min-width:18px;height:18px;line-height:18px;border-radius:9px;background:#c0392b;color:#fff;font-size:11px;font-weight:700;text-align:center;padding:0 4px"></span></button><button id="tm" type="button" style="padding:7px 11px;border-radius:999px"></button><button id="lg" class="lg" type="button" style="padding:7px 16px;font-size:13px;white-space:nowrap;border-radius:999px">🔑 Login</button></div></div>
+  <!-- HALAMAN UTAMA (DAFTAR & DASHBOARD) -->
+  <div id="home">
+    <div id="toast" class="note" style="display:none;background:rgba(16,185,129,0.14);color:#059669;border:1px solid rgba(16,185,129,0.3);padding:12px 16px;border-radius:14px;font-weight:700;margin:0 0 18px"></div>
 
+    <!-- KPI Ringkasan -->
+    <div class="dashboard-top">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(79,70,229,0.12);color:#4f46e5">📄</div>
+        <div class="stat-info">
+          <div class="stat-label">Surat Ditampilkan</div>
+          <div class="stat-val" id="st-total">0</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(16,185,129,0.12);color:#10b981">🖨️</div>
+        <div class="stat-info">
+          <div class="stat-label">Sudah Dicetak</div>
+          <div class="stat-val" id="st-print">0</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(245,158,11,0.14);color:#d97706">✔️</div>
+        <div class="stat-info">
+          <div class="stat-label">Sudah Kembali</div>
+          <div class="stat-val" id="st-back">0</div>
+        </div>
+      </div>
+    </div>
 
-<div id="home">
-<section>
-<h2>Daftar Surat Jalan</h2>
-<p id="toast" class="note" style="display:none;color:#1f8a4c;font-weight:600;margin:0 0 10px"></p>
-<div class="row" style="margin:0 0 6px"><button class="p" id="newbtn" type="button">📝 Buat surat jalan baru</button></div>
+    <!-- Filter & Search Bar -->
+    <div class="toolbar-card">
+      <div class="toolbar-grid">
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="q" type="search" placeholder="Cari nomor surat, pengawas, plat, SPK, atau barang..." aria-label="Cari surat jalan">
+        </div>
+        <select id="fm" aria-label="Filter bulan"></select>
+        <select id="fy" aria-label="Filter tahun"></select>
+        <button class="p" id="newbtn" type="button">📝 Buat Surat Baru</button>
+      </div>
+    </div>
 
-<div style="display:flex;gap:8px;margin:4px 0 8px"><select id="fm" aria-label="Filter bulan" style="flex:1"></select><select id="fy" aria-label="Filter tahun" style="flex:1"></select></div>
-<input id="q" type="search" placeholder="Cari surat jalan (semua bulan)" aria-label="Cari surat jalan" style="margin:0 0 8px">
-<div class="hist" id="hist"></div>
-</section>
-</div>
+    <!-- Daftar Riwayat -->
+    <div class="hist" id="hist"></div>
+  </div>
 
-<div id="editor" style="display:none">
-<div class="row" style="margin:0 0 10px"><button class="gray" id="back" type="button">⬅️ Kembali ke daftar</button></div>
-<p class="note" id="locknote" style="display:none;margin:0 0 10px">Hubungi admin untuk mengubah atau mencetak surat jalan</p>
+  <!-- HALAMAN EDITOR / FORMULIR (SPLIT VIEW) -->
+  <div id="editor" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="gray" id="back" type="button" style="flex:0 1 auto">⬅️ Kembali ke Daftar</button>
+      <div id="locknote" style="display:none;background:rgba(245,158,11,0.15);color:#d97706;border:1px solid rgba(245,158,11,0.3);padding:8px 14px;border-radius:10px;font-size:13px;font-weight:600">
+        🔒 Mode Baca — Hubungi admin untuk mengubah atau mencetak surat jalan
+      </div>
+    </div>
 
-<section>
-<h2>Data surat</h2>
-<div class="g">
-<input id="no" type="hidden">
-<div class="w"><label for="jd">Judul</label><select id="jd"><option value="SURAT JALAN KELUAR BARANG - MANIKA STONE ART">MANIKA STONE ART</option><option value="SURAT JALAN KELUAR BARANG - BANGUNAN">BANGUNAN</option></select></div>
-<div><label for="dt">Tanggal</label><input id="dt" type="date"></div>
-<div><label for="nm">Nama (pembawa)</label><input id="nm" autocapitalize="characters"></div>
-<div><label for="pt">No. plat</label><input id="pt" autocapitalize="characters"></div>
+    <div class="editor-layout">
+      <!-- Kolom Kiri: Input Form -->
+      <div class="editor-forms">
+        <section>
+          <h2><span class="sec-badge">1</span> Informasi Umum Surat</h2>
+          <div class="g">
+            <input id="no" type="hidden">
+            <div class="w">
+              <label for="jd">Unit / Kop Surat Jalan</label>
+              <select id="jd">
+                <option value="SURAT JALAN KELUAR BARANG - MANIKA STONE ART">MANIKA STONE ART</option>
+                <option value="SURAT JALAN KELUAR BARANG - BANGUNAN">BANGUNAN</option>
+              </select>
+            </div>
+            <div>
+              <label for="dt">Tanggal Surat</label>
+              <input id="dt" type="date">
+            </div>
+            <div>
+              <label for="pt">Nomor Plat Kendaraan</label>
+              <input id="pt" placeholder="Contoh: K 1234 AB" autocapitalize="characters">
+            </div>
+            <div class="w">
+              <label for="nm">Nama Pembawa / Sopir</label>
+              <input id="nm" placeholder="Masukkan nama pembawa barang" autocapitalize="characters">
+            </div>
+          </div>
+        </section>
 
+        <section>
+          <h2><span class="sec-badge">2</span> Rincian Barang & Tujuan</h2>
+          <div id="items"></div>
+          <div class="row" style="margin-top:12px;margin-bottom:20px">
+            <button id="add" class="add" type="button">➕ Tambah Baris Barang</button>
+            <button id="del" class="del" type="button">➖ Hapus Baris Terakhir</button>
+          </div>
 
+          <div class="g" style="padding-top:18px;border-top:1.5px dashed var(--line)">
+            <div>
+              <label for="drs">Asal Barang (Dari)</label>
+              <select id="drs">
+                <option value="">Pilih asal...</option>
+                <option value="PBM">PBM</option>
+                <option value="X">Lainnya</option>
+              </select>
+              <input id="dr" placeholder="Ketik asal barang..." autocapitalize="characters" aria-label="Dari (lainnya)" style="display:none;margin-top:8px">
+            </div>
+            <div>
+              <label for="dk">Dibawa Ke (Tujuan)</label>
+              <input id="dk" placeholder="Lokasi tujuan pengiriman" autocapitalize="characters">
+            </div>
+            <div class="w">
+              <label for="sp">Nomor SPK (Hanya Angka)</label>
+              <input id="sp" placeholder="Masukkan angka nomor SPK" inputmode="numeric" pattern="[0-9]*">
+            </div>
+          </div>
+        </section>
 
-</div>
-</section>
+        <section>
+          <h2><span class="sec-badge">3</span> Otorisasi & Tanda Tangan</h2>
+          <div class="g">
+            <div>
+              <label for="pw">Pengawas (Wajib)</label>
+              <input id="pw" placeholder="Nama pengawas" autocapitalize="characters">
+            </div>
+            <div id="gdw" style="display:none">
+              <label for="gd">Gudang (Opsional)</label>
+              <input id="gd" placeholder="Nama petugas gudang" autocapitalize="characters">
+            </div>
+            <div>
+              <label for="pk">Piket Keluar (Opsional)</label>
+              <input id="pk" placeholder="Nama piket keluar" autocapitalize="characters">
+            </div>
+            <div>
+              <label for="pn">Penerima (Opsional)</label>
+              <input id="pn" placeholder="Nama penerima" autocapitalize="characters">
+            </div>
+          </div>
+        </section>
+      </div>
 
-<section>
-<h2>Barang</h2>
-<div id="items"></div>
-<div class="g" style="margin-top:14px">
-<div><label for="drs">Dari</label><select id="drs"><option value="">Pilih</option><option value="PBM">PBM</option><option value="X">Lainnya</option></select><input id="dr" autocapitalize="characters" aria-label="Dari (lainnya)" style="display:none;margin-top:8px"></div>
-<div><label for="dk">Dibawa ke</label><input id="dk" autocapitalize="characters"></div>
-<div class="w"><label for="sp">No. SPK (angka saja)</label><input id="sp" inputmode="numeric" pattern="[0-9]*"></div>
-</div>
-<div class="row"><button id="add" class="add" type="button">➕ Tambah barang</button><button id="del" class="del" type="button">➖ Hapus barang</button></div>
-</section>
+      <!-- Kolom Kanan: Pratinjau Cetak & Tombol Simpan -->
+      <div class="editor-Preview-sticky">
+        <section>
+          <h2><span class="sec-badge">🖨️</span> Pratinjau Kertas Surat Jalan</h2>
+          <div class="g" style="display:none">
+            <div><label for="pg">Panjang kertas</label><select id="pg"><option value="66">Continuous form 11 inci (66 baris)</option><option value="33">5,5 inci (33 baris)</option><option value="51">Folio 8,5 inci (51 baris)</option><option value="28">1 surat jalan (28 baris)</option></select></div>
+            <div><label for="sd">Kecepatan</label><select id="sd"><option value="1">Cepat (draft)</option><option value="0">Halus (LQ)</option></select></div>
+            <div><label for="fs">Ukuran huruf cetak</label><select id="fs"><option value="11">11 pt (kecil)</option><option value="12">12 pt</option><option value="12.5">12,5 pt</option><option value="13">13 pt (pas kertas 9,5 inci)</option></select></div>
+            <div><label for="ox">Geser posisi ke kanan (mm)</label><input id="ox" type="number" step="1" inputmode="numeric" value="0"></div>
+            <div><label for="ml">Geser kanan printer USB (kolom)</label><input id="ml" type="number" min="0" max="40" step="1" inputmode="numeric" value="0"></div>
+            <div><label for="bd">Huruf tebal (USB)</label><select id="bd"><option value="0">Tidak</option><option value="1">Ya</option></select></div>
+          </div>
 
-<section>
-<h2>Tanda tangan</h2>
-<div class="g">
-<div><label for="pw">Pengawas</label><input id="pw" autocapitalize="characters"></div>
-<div id="gdw" style="display:none"><label for="gd">Gudang (opsional)</label><input id="gd" autocapitalize="characters"></div>
-<div><label for="pk">Piket keluar (opsional)</label><input id="pk" autocapitalize="characters"></div>
-<div><label for="pn">Penerima (opsional)</label><input id="pn" autocapitalize="characters"></div>
+          <div class="sheet-container">
+            <div class="sheet"><pre id="pv"></pre></div>
+          </div>
 
+          <div class="msg" id="msg" role="status"></div>
 
-</div>
-</section>
-
-<section>
-<h2>Pratinjau</h2>
-<div class="g" style="display:none">
-<div><label for="pg">Panjang kertas</label><select id="pg"><option value="66">Continuous form 11 inci (66 baris)</option><option value="33">5,5 inci (33 baris)</option><option value="51">Folio 8,5 inci (51 baris)</option><option value="28">1 surat jalan (28 baris)</option></select></div>
-<div><label for="sd">Kecepatan</label><select id="sd"><option value="1">Cepat (draft)</option><option value="0">Halus (LQ)</option></select></div>
-<div><label for="fs">Ukuran huruf cetak</label><select id="fs"><option value="11">11 pt (kecil)</option><option value="12">12 pt</option><option value="12.5">12,5 pt</option><option value="13">13 pt (pas kertas 9,5 inci)</option></select></div>
-<div><label for="ox">Geser posisi ke kanan (mm)</label><input id="ox" type="number" step="1" inputmode="numeric" value="0"></div>
-<div><label for="ml">Geser kanan printer USB (kolom)</label><input id="ml" type="number" min="0" max="40" step="1" inputmode="numeric" value="0"></div>
-<div><label for="bd">Huruf tebal (USB)</label><select id="bd"><option value="0">Tidak</option><option value="1">Ya</option></select></div>
-</div>
-<div class="sheet"><pre id="pv"></pre></div>
-<div class="row">
-<button class="print" id="usb" type="button">🖨️ Cetak di printer bangunan</button>
-<button class="dark" id="l360" type="button">🖨️ Cetak di printer manika</button>
-</div>
-<div class="msg" id="msg" role="status"></div>
-
-
-</section>
-
-<section>
-<h2>Simpan</h2>
-<div class="row"><button class="p" id="save" type="button">💾 Simpan surat jalan ini</button></div>
-
-</section>
-</div>
+          <div class="row" style="margin-top:16px">
+            <button class="p" id="save" type="button" style="flex:1 1 100%;padding:14px">💾 Simpan Surat Jalan Ini</button>
+            <button class="print" id="usb" type="button">🖨️ Cetak Printer Bangunan</button>
+            <button class="dark" id="l360" type="button">🖨️ Cetak Printer Manika</button>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
 </main>
-<div id="npw" style="display:none;position:fixed;inset:0;z-index:40"><div id="np" style="position:absolute;top:calc(env(safe-area-inset-top,0px) + 56px);right:12px;left:12px;max-width:420px;margin-left:auto;max-height:70vh;overflow:auto;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:0 8px 24px rgba(0,0,0,.3)"><div style="display:flex;align-items:center"><strong style="flex:1">🔔 Notifikasi</strong><button id="npx" type="button" aria-label="Tutup" style="padding:4px 10px">✕</button></div><div id="npl"></div><div class="row" style="margin:10px 0 0"><button id="npr" type="button" style="display:none">✔️ Tandai semua dibaca</button><button id="npn" type="button" style="display:none">🔔 Aktifkan notifikasi</button></div></div></div>
-<div id="dlg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;align-items:center;justify-content:center;padding:16px"><div style="background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:16px;width:100%;max-width:340px"><h2 id="dtl"></h2><label for="dp">Password</label><input id="dp" type="password" autocomplete="off"><div id="dp2w" style="display:none;margin-top:8px"><label for="dp2">Ulangi password</label><input id="dp2" type="password" autocomplete="off"></div><p class="note" id="derr" style="color:#c0392b;min-height:18px"></p><div class="row"><button class="p" id="dok" type="button">✅ OK</button><button class="gray" id="dcn" type="button">✖️ Batal</button></div></div></div>
+
+<!-- Popover Notifikasi -->
+<div id="npw" style="display:none;position:fixed;inset:0;z-index:40;background:rgba(15,23,42,0.35);backdrop-filter:blur(3px)">
+  <div id="np" style="position:absolute;top:calc(env(safe-area-inset-top,0px) + 68px);right:16px;left:16px;max-width:420px;margin-left:auto;max-height:75vh;overflow:auto;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow-lg)">
+    <div style="display:flex;align-items:center;margin-bottom:12px">
+      <strong style="flex:1;font-size:15px">🔔 Notifikasi Surat Baru</strong>
+      <button id="npx" type="button" aria-label="Tutup" style="padding:4px 10px;border-radius:8px">✕</button>
+    </div>
+    <button id="npr" class="p" type="button" style="display:none;width:100%;margin-bottom:4px">✔️ Sudah dibaca semua</button>
+    <div id="npl"></div>
+    <div class="row" style="margin:14px 0 0">
+      <button id="npn" type="button" style="display:none">🔔 Aktifkan notifikasi</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Dialog Password -->
+<div id="dlg" class="modal-overlay">
+  <div class="modal-box">
+    <h2 id="dtl" style="margin-bottom:16px"></h2>
+    <div>
+      <label for="dp">Password Admin</label>
+      <input id="dp" type="password" placeholder="Masukkan password..." autocomplete="off">
+    </div>
+    <div id="dp2w" style="display:none;margin-top:12px">
+      <label for="dp2">Konfirmasi Password</label>
+      <input id="dp2" type="password" placeholder="Ulangi password..." autocomplete="off">
+    </div>
+    <p class="note" id="derr" style="color:#ef4444;min-height:20px;font-weight:600"></p>
+    <div class="row" style="margin-top:10px">
+      <button class="p" id="dok" type="button">✅ Masuk</button>
+      <button class="gray" id="dcn" type="button">✖️ Batal</button>
+    </div>
+  </div>
+</div>
+
 <div id="pr"><pre id="prp"></pre></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
@@ -168,10 +1203,10 @@ set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 function itemRow(d){
  d=d||{};
  var e=document.createElement('div');e.className='item';
- e.innerHTML='<div class="n"><label>Nama barang</label><input class="in" autocapitalize="characters"></div>'+
- '<div><label>Jumlah</label><input class="iq" inputmode="decimal"></div>'+
- '<div><label>Satuan</label><input class="is"></div>'+
- '<div class="k"><label>Keterangan (opsional)</label><input class="ik" autocapitalize="characters"></div>';
+ e.innerHTML='<div class="n"><label>Nama Barang</label><input class="in" placeholder="Ketik nama / spesifikasi barang" autocapitalize="characters"></div>'+
+ '<div><label>Jumlah</label><input class="iq" placeholder="0" inputmode="decimal"></div>'+
+ '<div><label>Satuan</label><input class="is" placeholder="Pcs / M2 / Btg"></div>'+
+ '<div class="k"><label>Keterangan (Opsional)</label><input class="ik" placeholder="Catatan tambahan jika ada" autocapitalize="characters"></div>';
  e.querySelector('.in').value=d.n||'';e.querySelector('.iq').value=d.q||'';
  e.querySelector('.is').value=d.s||'';e.querySelector('.ik').value=d.k||'';
  $('#items').appendChild(e);
@@ -194,7 +1229,7 @@ function rep(c,n){return c.repeat(n)}
 function ctr(s,w){s=s.slice(0,w);var l=Math.floor((w-s.length)/2);return pad(' '.repeat(l)+s,w)}
 function fmtDate(v){if(!v)return'';var p=v.split('-');return p[2]+'/'+p[1]+'/'+p[0]}
 
-var COLS=73; // lebar teks (kolom, 10 cpi): sisakan margin kosong kanan = kiri
+var COLS=73;
 function build(d){
  var W=COLS,L=[];
  L.push(ctr(U(d.jd||JD),W));L.push('');
@@ -232,17 +1267,16 @@ function render(){gdVis();var d=getData(),t=build(d);RAW=t;$('#pv').innerHTML=to
  st.textContent='@page{size:9.5in '+(n/6)+'in;margin:0}@media print{#pr pre{font:'+fs+'pt/12pt "Courier New",Courier,monospace;padding-left:'+left.toFixed(1)+'pt}}';
  S.set('sj2_draft',d);S.set('sj2_pg',$('#pg').value);S.set('sj2_fs',$('#fs').value);S.set('sj2_ox',$('#ox').value);S.set('sj3_ml',$('#ml').value);S.set('sj2_bd',$('#bd').value)}
 
-function msg(t,err){var m=$('#msg');m.textContent=t;m.style.color=err?'#c0392b':'inherit'}
+function msg(t,err){var m=$('#msg');m.textContent=t;m.style.color=err?'#ef4444':'inherit'}
 
 function toBytes(text,len,draft,ml,bold){
- // reset, batal proporsional, paksa 10 cpi (pica), batal condensed & double-width, 6 baris/inci, panjang halaman, draft/LQ, tebal
  var b=[0x1b,0x40,0x1b,0x70,0,0x1b,0x50,0x12,0x1b,0x57,0,0x1b,0x32,0x1b,0x43,len,0x1b,0x78,draft?0:1,0x1b,bold?0x45:0x46];
  if(ml>0)b.push(0x1b,0x51,Math.min(255,COLS+ml),0x1b,0x6c,ml);
  text.split('\n').forEach(function(l){
-  if(/^─+$/.test(l)){b.push(0x1b,0x2d,1);for(var k=0;k<l.length;k++)b.push(0x20);b.push(0x1b,0x2d,0)} // garis penuh: spasi bergaris-bawah
+  if(/^─+$/.test(l)){b.push(0x1b,0x2d,1);for(var k=0;k<l.length;k++)b.push(0x20);b.push(0x1b,0x2d,0)}
   else for(var i=0;i<l.length;i++){var c=l.charCodeAt(i);b.push(c<128?c:63)}
   b.push(13,10)});
- b.push(0x1b,0x43,0,22,0x0c,0x1b,0x40); // panjang halaman 22 inci lalu form feed: kertas terus maju sampai sensor paper-out; terakhir reset printer
+ b.push(0x1b,0x43,0,22,0x0c,0x1b,0x40);
  return new Uint8Array(b);
 }
 var UD=null,UEP=null,UIF=null;
@@ -305,16 +1339,14 @@ function curTheme(){var t=document.documentElement.getAttribute('data-theme');re
 function updTm(){var t=curTheme();$('#tm').innerHTML=ico(t==='dark'?'sun':'moon');$('#tm').setAttribute('aria-label',t==='dark'?'Pakai mode terang':'Pakai mode gelap')}
 function toggleTheme(){var t=curTheme()==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('sj_theme',t)}catch(e){}updTm()}
 function initTheme(){try{var st=localStorage.getItem('sj_theme');if(st)document.documentElement.setAttribute('data-theme',st)}catch(e){}updTm()}
-function initIcons(){setBtn('newbtn','doc','Buat surat jalan baru');setBtn('back','back','Kembali ke daftar');setBtn('add','plus','Tambah barang');setBtn('del','minus','Hapus barang');setBtn('save','save','Simpan surat jalan ini');setBtn('usb','print','Cetak di printer bangunan');setBtn('l360','print','Cetak di printer manika');setBtn('dok','check','OK');setBtn('dcn','x','Batal')}
+function initIcons(){setBtn('newbtn','doc','Buat Surat Baru');setBtn('back','back','Kembali ke Daftar');setBtn('add','plus','Tambah Barang');setBtn('del','minus','Hapus Barang');setBtn('save','save','Simpan Surat Jalan Ini');setBtn('usb','print','Cetak Printer Bangunan');setBtn('l360','print','Cetak Printer Manika');setBtn('dok','check','OK');setBtn('dcn','x','Batal')}
 var isAdmin=false,ADM_HASH=null,canSetup=false;
 function applyLock(){var lock=!!cur&&!isAdmin;
  document.querySelectorAll('#editor input,#editor select').forEach(function(e){e.disabled=lock});
- ['add','del'].forEach(function(i){$('#'+i).style.display=lock?'none':''});
- document.querySelectorAll('#editor section').forEach(function(s){if(!s.contains($('#pv')))s.style.display=lock?'none':''});
- document.querySelectorAll('#editor details').forEach(function(d){d.style.display=lock?'none':''});
-
+ ['add','del','save'].forEach(function(i){$('#'+i).style.display=lock?'none':''});
+ document.querySelectorAll('#editor .editor-forms').forEach(function(s){s.style.display=lock?'none':''});
  $('#locknote').style.display=lock?'block':'none'}
-function applyRole(){var on=isAdmin;$('#usb').style.display=$('#l360').style.display=on?'':'none';setBtn('lg',on?'out':'key',on?'Keluar':'Login');applyLock();drawHist()}
+function applyRole(){var on=isAdmin;$('#usb').style.display=$('#l360').style.display=on?'':'none';setBtn('lg',on?'out':'key',on?'Keluar':'Login Admin');applyLock();drawHist()}
 function setAdmin(h){isAdmin=!!h;try{if(h)localStorage.setItem('sj_adm',h);else localStorage.removeItem('sj_adm')}catch(e){}applyRole()}
 function sha(s){return crypto.subtle.digest('SHA-256',new TextEncoder().encode('sj-v1:'+s)).then(function(b){return Array.prototype.map.call(new Uint8Array(b),function(x){return('0'+x.toString(16)).slice(-2)}).join('')})}
 function askPass(title,twice){return new Promise(function(res){
@@ -323,14 +1355,14 @@ function askPass(title,twice){return new Promise(function(res){
  $('#dcn').onclick=function(){done(null)};
  $('#dok').onclick=function(){var a=$('#dp').value;if(!a){$('#derr').textContent='Password tidak boleh kosong.';return}if(twice&&a!==$('#dp2').value){$('#derr').textContent='Kedua password tidak sama.';return}done(a)};
 })}
-async function setPass(){var p=await askPass('Buat password admin',true);if(p===null)return;var h=await sha(p);var r=await db.from('sj_config').upsert({key:'admin',value:{hash:h}});if(r.error)throw r.error;ADM_HASH=h;setAdmin(h)}
+async function setPass(){var p=await askPass('Buat Password Admin',true);if(p===null)return;var h=await sha(p);var r=await db.from('sj_config').upsert({key:'admin',value:{hash:h}});if(r.error)throw r.error;ADM_HASH=h;setAdmin(h)}
 async function loginClick(){
  if(isAdmin){setAdmin(null);return}
  if(!db){alert('Database belum tersambung.');return}
  if(!window.crypto||!crypto.subtle){alert('Browser ini tidak mendukung login.');return}
  try{
   if(!ADM_HASH){if(canSetup){await setPass()}else{alert('Password admin belum diatur. Hubungi pemilik halaman.')}return}
-  var p=await askPass('Login admin',false);if(p===null)return;
+  var p=await askPass('Login Admin',false);if(p===null)return;
   var h=await sha(p);
   if(h===ADM_HASH){setAdmin(h)}
   else{alert('Password salah.')}
@@ -338,11 +1370,10 @@ async function loginClick(){
 }
 function markPrinted(){if(db&&cur)db.from('suratjalan').update({printed:true,printed_at:Date.now()}).eq('no',cur).eq('periode',curP).then(function(){loadHist().catch(function(){})},function(){})}
 function gdVis(){var s=$('#drs'),i=$('#dr');$('#gdw').style.display=(s.value==='PBM'||(s.value==='X'&&/\bPBM\b/i.test(i.value)))?'':'none'}
-function toast(t){var e=$('#toast');e.textContent=t;e.style.display='block'}
+function toast(t){var e=$('#toast');e.textContent='✅ '+t;e.style.display='block'}
 
-// === Tombol kembali HP: tutup panel/halaman satu per satu, jangan langsung keluar ===
 var NAV=[],NAVQ=0,NAVAFTER=null,exitT=null;
-function exitMsg(){var m=document.getElementById('exitmsg');if(!m){m=document.createElement('div');m.id='exitmsg';m.style.cssText='display:none;position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 24px);transform:translateX(-50%);background:rgba(0,0,0,.82);color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;z-index:60;text-align:center;max-width:90%';document.body.appendChild(m)}return m}
+function exitMsg(){var m=document.getElementById('exitmsg');if(!m){m=document.createElement('div');m.id='exitmsg';m.style.cssText='display:none;position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 24px);transform:translateX(-50%);background:rgba(15,23,42,.92);color:#fff;padding:10px 18px;border-radius:999px;font-size:13px;font-weight:600;z-index:60;text-align:center;max-width:90%;box-shadow:0 6px 20px rgba(0,0,0,0.25)';document.body.appendChild(m)}return m}
 function navPush(k){
  if(!NAV.length){clearTimeout(exitT);exitMsg().style.display='none';NAV.push('home');history.pushState({k:'home'},'')}
  NAV.push(k);history.pushState({k:k},'')}
@@ -366,6 +1397,7 @@ function today(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+
 
 var BLN=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 function perLabel(p){var a=p.split('-');return BLN[+a[1]-1]+' '+a[0]}
+var HPAGE=1,HPER=20;
 var FY=today().slice(0,4),FM=today().slice(5,7),curP='';
 var db=null,HIST=[],dbState='loading',cur='',START=1,holder='h'+Math.random().toString(36).slice(2);
 function hl(el,t,w){
@@ -390,7 +1422,7 @@ function drawNP(){
  var l=$('#npl');l.innerHTML='';var a=HIST.filter(isNewDoc);
  if(!a.length)l.innerHTML='<p class="note">Tidak ada surat jalan baru.</p>';
  a.forEach(function(d){var b=document.createElement('button');b.type='button';
-  b.style.cssText='display:block;width:100%;text-align:left;margin-top:8px;font-weight:400;line-height:1.4;padding:10px 12px;white-space:pre-line;border-left:6px solid #2980b9';
+  b.style.cssText='display:block;width:100%;text-align:left;margin-top:8px;font-weight:500;line-height:1.45;padding:12px 14px;white-space:pre-line;border-left:4px solid var(--ac);background:var(--card-alt)';
   b.textContent='🆕 '+d.no+' — '+(d.pw||'tanpa pengawas')+' ('+fmtDate(d.dt)+')\nDibawa ke: '+(d.dk||'-')+'  |  SPK: '+(d.sp||'-');
   b.onclick=function(){closeNP(function(){cur=d.no;curP=d.periode;setData(d);showEditor()})};l.appendChild(b)});
  $('#npr').style.display=(a.length&&isAdmin)?'':'none';
@@ -399,7 +1431,7 @@ async function markAllRead(){
  if(!isAdmin||!db)return;
  var r=await db.from('suratjalan').update({dibaca:true}).eq('dibaca',false);
  if(r.error){alert('Gagal menandai dibaca: '+r.error.message);return}
- await loadHist()}
+ await loadHist();closeNP()}
 function beep(){try{var c=new (window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.value=.15;o.start();setTimeout(function(){o.stop();c.close()},350)}catch(e){}}
 function alertNew(r){
  var d=r.doc||{},t='Surat jalan baru no. '+r.no+(d.pw?' — '+d.pw:'');
@@ -407,38 +1439,152 @@ function alertNew(r){
  try{if(window.Notification&&Notification.permission==='granted')new Notification('Surat Jalan Baru',{body:t})}catch(e){}}
 function drawFilter(){
  var ys={};ys[today().slice(0,4)]=1;if(FY)ys[FY]=1;HIST.forEach(function(d){ys[d.periode.slice(0,4)]=1});
- var fy=$('#fy'),fm=$('#fm'),o='<option value="">Semua tahun</option>';
+ var fy=$('#fy'),fm=$('#fm'),o='<option value="">Semua Tahun</option>';
  Object.keys(ys).sort().reverse().forEach(function(y){o+='<option value="'+y+'">'+y+'</option>'});
  fy.innerHTML=o;fy.value=FY;
- var m='<option value="">Semua bulan</option>';
+ var m='<option value="">Semua Bulan</option>';
  BLN.forEach(function(n,i){m+='<option value="'+('0'+(i+1)).slice(-2)+'">'+n+'</option>'});
  fm.innerHTML=m;fm.value=FM}
+
+function updateStats(list){
+ $('#st-total').textContent=list.length;
+ $('#st-print').textContent=list.filter(function(x){return x.printed}).length;
+ $('#st-back').textContent=list.filter(function(x){return x.kembali}).length;
+}
+
 function drawHist(){
  drawNotif();
  var box=$('#hist');box.innerHTML='';
- if(!db){box.innerHTML='<p class="note">'+(dbState==='loading'?'Menyambungkan ke database...':'Database belum tersambung. Cek koneksi internet lalu muat ulang halaman.')+'</p>';return}
+ if(!db){
+  updateStats([]);
+  box.innerHTML='<section style="text-align:center;padding:40px 20px"><p class="note" style="font-size:15px">'+(dbState==='loading'?'⏳ Menyambungkan ke database...':'⚠️ Database belum tersambung. Cek koneksi internet lalu muat ulang halaman.')+'</p></section>';
+  return;
+ }
  drawFilter();
  var h=HIST,q=($('#q').value||'').toLowerCase().split(/\s+/).filter(Boolean);
- if(!h.length){box.innerHTML='<p class="note">Belum ada surat jalan tersimpan.</p>';return}
+ if(!h.length){
+  updateStats([]);
+  box.innerHTML='<section style="text-align:center;padding:40px 20px"><p class="note" style="font-size:15px">Belum ada surat jalan tersimpan.</p></section>';
+  return;
+ }
  if(q.length)h=h.filter(function(d){var s=[d.no,d.pw,d.nm,d.pt,d.sp,d.dr,d.dk,d.dt,fmtDate(d.dt)].concat((d.items||[]).map(function(i){return i.n})).join(' ').toLowerCase();return q.every(function(w){return s.indexOf(w)>-1})});
  else h=h.filter(function(d){return (!FY||d.periode.slice(0,4)===FY)&&(!FM||d.periode.slice(5,7)===FM)});
- if(!h.length){box.innerHTML='<p class="note">'+(q.length?'Tidak ada surat jalan yang cocok.':'Belum ada surat jalan pada periode ini.')+'</p>';return}
+ 
+ updateStats(h);
+
+ if(!h.length){
+  box.innerHTML='<section style="text-align:center;padding:40px 20px"><p class="note" style="font-size:15px">'+(q.length?'🔍 Tidak ada surat jalan yang cocok dengan kata kunci pencarian.':'📭 Belum ada surat jalan pada bulan/periode ini.')+'</p></section>';
+  return;
+ }
  var cnt={};h.forEach(function(d){cnt[d.periode]=(cnt[d.periode]||0)+1});
+ var total=h.length,pages=Math.max(1,Math.ceil(total/HPER));
+ if(HPAGE>pages)HPAGE=pages;if(HPAGE<1)HPAGE=1;
+ h=h.slice((HPAGE-1)*HPER,HPAGE*HPER);
  var last='';
  h.forEach(function(d){
-  if(d.periode!==last){last=d.periode;var t=document.createElement('div');t.className='note';t.style.cssText='font-weight:700;margin:16px 0 0;border-bottom:1px solid var(--mut);padding-bottom:4px';t.textContent=perLabel(d.periode)+' · '+cnt[d.periode]+' surat';box.appendChild(t)}
-  var b=document.createElement('button');b.type='button';
-  var tx=(isAdmin&&isNewDoc(d)?'🆕 BARU · ':'')+d.no+' — '+(d.pw||'tanpa pengawas')+' ('+fmtDate(d.dt)+')'+'\nSPK: '+(d.sp||'-')+'  |  Dari: '+(d.dr||'-')+'  |  Dibawa ke: '+(d.dk||'-')+'\n'+((d.items||[]).map(function(i){return (i.n||'').toUpperCase()+(i.q?' ('+i.q+(i.s?' '+i.s.toUpperCase():'')+')':'')}).filter(Boolean).join(', ')||'-');
-  var ok=d.kembali;b.style.whiteSpace='pre-line';hl(b,tx,q);
-  b.style.cssText+=';margin:0;width:100%;border:0;box-shadow:none;background:transparent;border-radius:0;padding:11px 14px 4px';
+  if(d.periode!==last){
+   last=d.periode;
+   var mh=document.createElement('div');
+   mh.className='hist-month-header';
+   mh.innerHTML='<div class="hist-month-title">'+perLabel(d.periode)+'</div><div class="hist-month-count">'+cnt[d.periode]+' Surat</div>';
+   box.appendChild(mh);
+  }
+  var ok=d.kembali;
+  var card=document.createElement('div');
+  card.className='sj-card';
+  
+  var b=document.createElement('button');
+  b.type='button';
+  b.className='sj-card-body';
   b.onclick=function(){cur=d.no;curP=d.periode;setData(d);showEditor()};
-  var w=document.createElement('div');w.style.cssText='margin-top:8px;border-radius:10px;overflow:hidden;border-left:6px solid '+(ok?'#1f8a4c':'#e67e22')+';background:'+(ok?'rgba(31,138,76,.15)':'rgba(230,126,34,.18)');w.appendChild(b);
-  var r=document.createElement('div');r.style.cssText='display:flex;align-items:center;gap:10px;padding:2px 14px 11px';
-  var sp=document.createElement('span');sp.textContent=d.printed?'SUDAH DICETAK':'BELUM DICETAK';sp.style.cssText='font-weight:700;color:'+(d.printed?'#1f9d4d':'#e53935');r.appendChild(sp);
-  if(isAdmin){var c=document.createElement('button');c.type='button';c.textContent='✔';c.setAttribute('aria-label',ok?'Batalkan tanda sudah kembali':'Tandai sudah kembali ke admin');c.title=ok?'Sudah kembali (ketuk untuk membatalkan)':'Tandai sudah kembali ke admin';
-   c.style.cssText='margin:0 0 0 auto;width:36px;height:36px;flex:none;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;line-height:1;box-shadow:none;border:2px solid '+(ok?'#1f8a4c':'#e67e22')+';'+(ok?'background:#1f8a4c;color:#fff':'background:transparent;color:#e67e22');
-   c.onclick=function(){toggleKembali(d)};r.appendChild(c)}
-  w.appendChild(r);box.appendChild(w)});
+
+  // Top Row inside Card
+  var top=document.createElement('div');
+  top.className='sj-top';
+  var noWrap=document.createElement('div');
+  noWrap.className='sj-no-wrap';
+  var noSpan=document.createElement('span');
+  noSpan.className='sj-no';
+  hl(noSpan,'NO. '+d.no,q);
+  noWrap.appendChild(noSpan);
+  if(isAdmin&&isNewDoc(d)){
+   var nb=document.createElement('span');
+   nb.className='sj-new-badge';
+   nb.textContent='BARU';
+   noWrap.appendChild(nb);
+  }
+  var dtSpan=document.createElement('span');
+  dtSpan.className='sj-date';
+  dtSpan.textContent='📅 '+fmtDate(d.dt);
+  top.appendChild(noWrap);
+  top.appendChild(dtSpan);
+  b.appendChild(top);
+
+  // Meta Grid (Pengawas, Pembawa/Plat, SPK, Rute)
+  var grid=document.createElement('div');
+  grid.className='sj-meta-grid';
+  
+  function addMeta(lbl,val){
+   var it=document.createElement('div');it.className='sj-meta-item';
+   var l=document.createElement('div');l.className='sj-meta-label';l.textContent=lbl;
+   var v=document.createElement('div');v.className='sj-meta-val';hl(v,val||'-',q);
+   it.appendChild(l);it.appendChild(v);grid.appendChild(it);
+  }
+  addMeta('Pengawas',d.pw||'Tanpa Pengawas');
+  addMeta('Pembawa / Plat',(d.nm||'-')+(d.pt?' ('+d.pt+')':''));
+  addMeta('No. SPK',d.sp||'-');
+  addMeta('Dari ➔ Tujuan',(d.dr||'-')+' ➔ '+(d.dk||'-'));
+  b.appendChild(grid);
+
+  // Items Summary
+  var ibox=document.createElement('div');
+  ibox.className='sj-items-box';
+  var itemStr=((d.items||[]).map(function(i){return (i.n||'').toUpperCase()+(i.q?' ('+i.q+(i.s?' '+i.s.toUpperCase():'')+')':'')}).filter(Boolean).join(', ')||'-');
+  var iIcon=document.createElement('span');iIcon.textContent='📦';
+  var iText=document.createElement('span');iText.style.fontWeight='600';hl(iText,itemStr,q);
+  ibox.appendChild(iIcon);ibox.appendChild(iText);
+  b.appendChild(ibox);
+
+  card.appendChild(b);
+
+  // Card Footer (Badges & Admin Action)
+  var foot=document.createElement('div');
+  foot.className='sj-Card-footer';
+  var badges=document.createElement('div');
+  badges.className='sj-badges';
+
+  var sp=document.createElement('span');
+  sp.className='pill '+(d.printed?'pill-green':'pill-red');
+  sp.textContent=d.printed?'🖨️ SUDAH DICETAK':'⏳ BELUM DICETAK';
+  badges.appendChild(sp);
+
+  var sb=document.createElement('span');
+  sb.className='pill '+(ok?'pill-green':'pill-amber');
+  sb.textContent=ok?'✔️ SUDAH KEMBALI':'🚚 BELUM KEMBALI';
+  badges.appendChild(sb);
+
+  foot.appendChild(badges);
+
+  if(isAdmin){
+   var c=document.createElement('button');c.type='button';
+   c.innerHTML=ok?'✔️ Sudah Kembali':'Tandai Kembali';
+   c.setAttribute('aria-label',ok?'Batalkan tanda sudah kembali':'Tandai sudah kembali ke admin');
+   c.style.cssText='padding:6px 12px;font-size:12px;border-radius:999px;box-shadow:none;flex:none;'+(ok?'background:#10b981;color:#fff;border-color:#10b981':'background:transparent;color:#d97706;border:1.5px solid #f59e0b');
+   c.onclick=function(){toggleKembali(d)};
+   foot.appendChild(c);
+  }
+  card.appendChild(foot);
+  box.appendChild(card);
+ });
+ if(pages>1){
+  var pg=document.createElement('div');pg.className='pager';
+  function go(n){HPAGE=n;drawHist();box.scrollIntoView()}
+  var pv=document.createElement('button');pv.type='button';pv.textContent='◀ Sebelumnya';pv.disabled=HPAGE<=1;pv.onclick=function(){go(HPAGE-1)};
+  var nx=document.createElement('button');nx.type='button';nx.textContent='Berikutnya ▶';nx.disabled=HPAGE>=pages;nx.onclick=function(){go(HPAGE+1)};
+  var inf=document.createElement('div');inf.className='pager-info';
+  inf.innerHTML='Halaman '+HPAGE+' dari '+pages+'<br><span style="font-weight:500">'+((HPAGE-1)*HPER+1)+'–'+Math.min(HPAGE*HPER,total)+' dari '+total+' surat</span>';
+  pg.appendChild(pv);pg.appendChild(inf);pg.appendChild(nx);box.appendChild(pg);
+ }
 }
 async function toggleKembali(d){
  if(!isAdmin||!db)return;
@@ -513,31 +1659,30 @@ $('#items').addEventListener('click',function(e){
 $('#drs').addEventListener('change',syncDr);
 $('#usb').onclick=function(){if(!isAdmin)return;save().then(function(ok){if(ok)usbPrint()})};
 window.addEventListener('afterprint',function(){render()});
-var COPIES=3; // jumlah salinan otomatis untuk printer manika
+var COPIES=3;
 $('#l360').onclick=function(){if(!isAdmin)return;save().then(function(ok){if(ok){render();
- var h=toHtml(RAW.replace(/\s+$/,'')),pgs=[];for(var i=1;i<=COPIES;i++)pgs.push('<div'+(i<COPIES?' style="break-after:page;page-break-after:always"':'')+'>'+h+'</div>');$('#prp').innerHTML=pgs.join(''); // satu halaman A4 per salinan
- document.getElementById('pgs').textContent='@page{size:A4 portrait;margin:12mm 15mm}@media print{#pr pre{font:11.5pt/14.5pt "Courier New",Courier,monospace;padding-left:0}}'; // kertas A4 untuk printer inkjet Epson L360
+ var h=toHtml(RAW.replace(/\s+$/,'')),pgs=[];for(var i=1;i<=COPIES;i++)pgs.push('<div'+(i<COPIES?' style="break-after:page;page-break-after:always"':'')+'>'+h+'</div>');$('#prp').innerHTML=pgs.join('');
+ document.getElementById('pgs').textContent='@page{size:A4 portrait;margin:12mm 15mm}@media print{#pr pre{font:11.5pt/14.5pt "Courier New",Courier,monospace;padding-left:0}}';
  window.print();markPrinted()}})};
 $('#save').onclick=function(){save().then(function(ok){if(ok){var n=cur;showHome();toast('Tersimpan: surat jalan no. '+n+'.')}})};
 $('#newbtn').onclick=fresh;$('#back').onclick=showHome;
 $('#lg').onclick=loginClick;$('#tm').onclick=toggleTheme;
-$('#q').addEventListener('input',drawHist);
+$('#q').addEventListener('input',function(){HPAGE=1;drawHist()});
 $('#bell').onclick=openNP;$('#npx').onclick=closeNP;
 $('#npw').onclick=function(e){if(e.target===this)closeNP()};
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeNP()});
 $('#npr').onclick=function(){markAllRead().catch(function(e){alert('Gagal: '+((e&&e.message)||e))})};
 $('#npn').onclick=function(){try{Notification.requestPermission().then(drawNP)}catch(e){}};
-$('#fy').addEventListener('change',function(){FY=this.value;drawHist()});
-$('#fm').addEventListener('change',function(){FM=this.value;drawHist()});
-
+$('#fy').addEventListener('change',function(){FY=this.value;HPAGE=1;drawHist()});
+$('#fm').addEventListener('change',function(){FM=this.value;HPAGE=1;drawHist()});
 
 var pg0=S.get('sj2_pg','28')||'28';
 var d0=S.get('sj2_draft',null);
 $('#pg').value='28';$('#fs').value='13';$('#ox').value=0;$('#ml').value=0;$('#bd').value='0';
 if(d0){setData(d0)}else{itemRow();render()}
 if(!$('#dt').value)$('#dt').value=today();
-
 if(!$('#jd').value)$('#jd').value=JD;
+
 (function(){
  canSetup=true;
  var t=setTimeout(function(){if(!db){dbState='failed';drawHist()}},10000);
