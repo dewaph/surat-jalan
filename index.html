@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Surat Jalan Keluar Barang</title>
+<meta name="theme-color" content="#4f46e5">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -251,7 +256,7 @@ main {
 
 .toolbar-grid {
   display: grid;
-  grid-template-columns: 1fr auto auto auto;
+  grid-template-columns: 1fr auto auto auto auto;
   gap: 10px;
   align-items: center;
 }
@@ -266,6 +271,9 @@ main {
   .toolbar-grid #newbtn {
     grid-column: 1 / -1;
     order: -1;
+  }
+  .toolbar-grid #impbtn, .toolbar-grid #expbtn {
+    grid-column: 1 / -1;
   }
 }
 
@@ -931,6 +939,11 @@ mark {
   .brand-logo { display: none; }
 }
 
+/* Import Excel */
+.imchk{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:500;color:var(--fg);margin:6px 0;cursor:pointer}
+.imchk input{width:auto;min-height:0;padding:0;margin:0;accent-color:var(--ac);flex:none}
+#imbody input[type=file]{padding:9px 10px}
+
 /* Pagination */
 .pager{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:18px 0 6px}
 .pager button{flex:1 1 0;max-width:150px;padding:10px 8px;font-size:13px}
@@ -1027,6 +1040,8 @@ select{min-width:0;text-overflow:ellipsis}
         <select id="fm" aria-label="Filter bulan"></select>
         <select id="fy" aria-label="Filter tahun"></select>
         <button class="p" id="newbtn" type="button">📝 Buat Surat Baru</button>
+        <button class="gray" id="impbtn" type="button" style="display:none">📥 Import Excel</button>
+        <button class="gray" id="expbtn" type="button" style="display:none">📤 Ekspor Excel</button>
       </div>
     </div>
 
@@ -1189,6 +1204,14 @@ select{min-width:0;text-overflow:ellipsis}
   </div>
 </div>
 
+<!-- Modal Import Excel -->
+<div id="imw" class="modal-overlay">
+  <div class="modal-box" style="max-width:520px;max-height:90vh;max-height:90dvh;overflow:auto">
+    <h2 style="margin-bottom:14px">📥 Import dari Excel</h2>
+    <div id="imbody"></div>
+  </div>
+</div>
+
 <div id="pr"><pre id="prp"></pre></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
@@ -1333,20 +1356,22 @@ function loadDr(){var s=$('#drs'),i=$('#dr'),v=i.value.trim();
  i.style.display=s.value==='X'?'block':'none'}
 function nextNo(){var m=0;S.get('sj2_hist',[]).forEach(function(x){var n=parseInt(x.no,10);if(n>m)m=n});return pad4(Math.max(S.get('sj2_next',1)||1,m+1))}
 var P={key:'<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3"/>',out:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',doc:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 11v6M9 14h6"/>',back:'<path d="M19 12H5M12 19l-7-7 7-7"/>',plus:'<path d="M12 5v14M5 12h14"/>',minus:'<path d="M5 12h14"/>',save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/>',print:'<path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/>',globe:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/>',check:'<path d="M20 6L9 17l-5-5"/>',x:'<path d="M18 6L6 18M6 6l12 12"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'};
+P.download='<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>';
+P.upload='<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>';
 function ico(n){return '<svg viewBox="0 0 24 24" aria-hidden="true">'+P[n]+'</svg>'}
 function setBtn(id,n,t){$('#'+id).innerHTML=ico(n)+t}
 function curTheme(){var t=document.documentElement.getAttribute('data-theme');return t||(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}
 function updTm(){var t=curTheme();$('#tm').innerHTML=ico(t==='dark'?'sun':'moon');$('#tm').setAttribute('aria-label',t==='dark'?'Pakai mode terang':'Pakai mode gelap')}
 function toggleTheme(){var t=curTheme()==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('sj_theme',t)}catch(e){}updTm()}
 function initTheme(){try{var st=localStorage.getItem('sj_theme');if(st)document.documentElement.setAttribute('data-theme',st)}catch(e){}updTm()}
-function initIcons(){setBtn('newbtn','doc','Buat Surat Baru');setBtn('back','back','Kembali ke Daftar');setBtn('add','plus','Tambah Barang');setBtn('del','minus','Hapus Barang');setBtn('save','save','Simpan Surat Jalan Ini');setBtn('usb','print','Cetak Printer Bangunan');setBtn('l360','print','Cetak Printer Manika');setBtn('dok','check','OK');setBtn('dcn','x','Batal')}
+function initIcons(){setBtn('impbtn','upload','Import Excel');setBtn('expbtn','download','Ekspor Excel');setBtn('newbtn','doc','Buat Surat Baru');setBtn('back','back','Kembali ke Daftar');setBtn('add','plus','Tambah Barang');setBtn('del','minus','Hapus Barang');setBtn('save','save','Simpan Surat Jalan Ini');setBtn('usb','print','Cetak Printer Bangunan');setBtn('l360','print','Cetak Printer Manika');setBtn('dok','check','OK');setBtn('dcn','x','Batal')}
 var isAdmin=false,ADM_HASH=null,canSetup=false;
 function applyLock(){var lock=!!cur&&!isAdmin;
  document.querySelectorAll('#editor input,#editor select').forEach(function(e){e.disabled=lock});
  ['add','del','save'].forEach(function(i){$('#'+i).style.display=lock?'none':''});
  document.querySelectorAll('#editor .editor-forms').forEach(function(s){s.style.display=lock?'none':''});
  $('#locknote').style.display=lock?'block':'none'}
-function applyRole(){var on=isAdmin;$('#usb').style.display=$('#l360').style.display=on?'':'none';setBtn('lg',on?'out':'key',on?'Keluar':'Login Admin');applyLock();drawHist()}
+function applyRole(){var on=isAdmin;$('#usb').style.display=$('#l360').style.display=on?'':'none';$('#impbtn').style.display=on?'':'none';$('#expbtn').style.display=on?'':'none';setBtn('lg',on?'out':'key',on?'Keluar':'Login Admin');applyLock();drawHist()}
 function setAdmin(h){isAdmin=!!h;try{if(h)localStorage.setItem('sj_adm',h);else localStorage.removeItem('sj_adm')}catch(e){}applyRole()}
 function sha(s){return crypto.subtle.digest('SHA-256',new TextEncoder().encode('sj-v1:'+s)).then(function(b){return Array.prototype.map.call(new Uint8Array(b),function(x){return('0'+x.toString(16)).slice(-2)}).join('')})}
 function askPass(title,twice){return new Promise(function(res){
@@ -1372,6 +1397,284 @@ function markPrinted(){if(db&&cur)db.from('suratjalan').update({printed:true,pri
 function gdVis(){var s=$('#drs'),i=$('#dr');$('#gdw').style.display=(s.value==='PBM'||(s.value==='X'&&/\bPBM\b/i.test(i.value)))?'':'none'}
 function toast(t){var e=$('#toast');e.textContent='✅ '+t;e.style.display='block'}
 
+/* ===== Import Excel: parser ===== */
+function xlCs(v){return v==null?'':String(v).replace(/\s+/g,' ').trim()}
+function xlP2(n){return('0'+n).slice(-2)}
+function xlDate(v){
+ if(v instanceof Date&&!isNaN(v))return v.getFullYear()+'-'+xlP2(v.getMonth()+1)+'-'+xlP2(v.getDate());
+ if(typeof v==='number'&&v>20000&&v<80000){var d=new Date(Math.round((v-25569)*864e5));return d.getUTCFullYear()+'-'+xlP2(d.getUTCMonth()+1)+'-'+xlP2(d.getUTCDate())}
+ var m=String(v==null?'':v).match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);
+ if(m){var y=+m[3];if(y<100)y+=2000;return y+'-'+xlP2(+m[2])+'-'+xlP2(+m[1])}
+ return ''}
+function xlQty(t){
+ t=xlCs(t);if(!t)return{q:'',s:''};
+ var m=t.match(/^(\d[\d.,\/]*)\s*(.*)$/);
+ return m?{q:m[1],s:m[2]}:{q:'',s:t}}
+function xlRoute(t,o){
+ var m=t.match(/^DARI\s+(.+?)(?:\s+(?:KE|DI\s?BAWA\s+KE)\s+(.+))?$/i);
+ if(m){o.dr=m[1].trim();if(m[2])o.dk=m[2].trim();return true}
+ m=t.match(/^DI\s?BAWA\s+KE\s+(.+)$/i);
+ if(m){o.dk=m[1].trim();return true}
+ return false}
+function xlFindCol(r,re){for(var i=0;i<r.length;i++)if(re.test(xlCs(r[i]).toUpperCase()))return i;return -1}
+function xlAfter(r,i){for(var j=i+1;j<r.length;j++)if(r[j]!==''&&r[j]!=null&&xlCs(r[j])!=='')return r[j];return ''}
+function xlParseBlock(B){
+ var o={jd:'',nm:'',pt:'',dt:'',no:'',dr:'',dk:'',sp:'',pw:'',gd:'',pk:'',pn:'',items:[]};
+ var head=xlCs(B[0][0]).toUpperCase();
+ o.jd=/BANGUNAN/.test(head)?'SURAT JALAN KELUAR BARANG - BANGUNAN':'SURAT JALAN KELUAR BARANG - MANIKA STONE ART';
+ var cn=1,cq=4,ck=5,inItems=false,sig=false,lastNames=null,lastNamesIdx=-1;
+ for(var i=1;i<B.length;i++){
+  var r=B[i],a=xlCs(r[0]).toUpperCase();
+  var lt=xlFindCol(r,/^TANGGAL/);if(lt>-1&&!o.dt)o.dt=xlDate(xlAfter(r,lt));
+  var ls=xlFindCol(r,/^NO\.? ?SURAT/);if(ls>-1&&!o.no)o.no=xlCs(xlAfter(r,ls));
+  if(/^NAMA\b/.test(a)&&!/^NAMA BARANG/.test(a)){o.nm=xlCs(r[1]);continue}
+  if(/^NO\.? ?PLAT/.test(a)){o.pt=xlCs(r[1]);continue}
+  if(a==='NO.'&&xlFindCol(r,/^NAMA BARANG/)>-1){
+   cn=xlFindCol(r,/^NAMA BARANG/);var q=xlFindCol(r,/^JUMLAH/),k=xlFindCol(r,/^KETERANGAN/);
+   if(q>-1)cq=q;if(k>-1)ck=k;inItems=true;continue}
+  if(/^MENGETAHUI/.test(a)){inItems=false;sig=true;lastNames=null;continue}
+  if(sig){
+   var lab=['GUDANG','PEMBAWA','PENGAWAS','PIKET','PENERIMA'],idx={},hit=0;
+   lab.forEach(function(L){var c=xlFindCol(r,new RegExp('^'+L));if(c>-1){idx[L]=c;hit++}});
+   if(hit>=3&&lastNames){
+    function nmAt(L){return idx[L]==null?'':xlCs(lastNames[idx[L]]).replace(/^\(+|\)+$/g,'').replace(/^[.\s]+$/,'').trim()}
+    o.gd=nmAt('GUDANG');o.pw=nmAt('PENGAWAS');o.pk=nmAt('PIKET');o.pn=nmAt('PENERIMA');
+    if(!o.nm)o.nm=nmAt('PEMBAWA');
+    sig=false;continue}
+   if(r.some(function(c){return xlCs(c)!==''}))lastNames=r;
+   continue}
+  if(!inItems)continue;
+  var n=xlCs(r[cn]),jm=xlCs(r[cq]),kt=xlCs(r[ck]);
+  if(/^\d+$/.test(xlCs(r[0]))){
+   var it={n:n,q:'',s:'',k:''},qq=xlQty(jm);it.q=qq.q;it.s=qq.s;
+   if(n||jm)o.items.push(it);
+   var tgt=o.items[o.items.length-1];
+   if(kt)xlNote(kt,o,tgt);
+   continue}
+  if(a===''){
+   var last=o.items[o.items.length-1];
+   if(n&&last&&!/^(DARI|DI ?BAWA)\b/i.test(n)){last.n+=' '+n;if(jm&&!last.q&&!last.s){var q2=xlQty(jm);last.q=q2.q;last.s=q2.s}}
+   else if(n&&xlRoute(n,o)){}
+   if(kt)xlNote(kt,o,last)}
+ }
+ if(o.nm==='0')o.nm='';if(o.pt==='0')o.pt='';
+ return o}
+function xlNote(t,o,it){
+ var m=t.match(/^(?:NO\.?\s*)?SPK\b[\s:.]*(.*)$/i);
+ if(m){if(!o.sp)o.sp=m[1].trim();return}
+ if(xlRoute(t,o))return;
+ if(it&&!/^\(?\s*\)?$/.test(t))it.k=(it.k?it.k+' ':'')+t;
+ else if(!o.dk&&o.dr)o.dk=t}
+function xlParseRows(rows){
+ var starts=[];
+ rows.forEach(function(r,i){if(/^SURAT JALAN/i.test(xlCs(r&&r[0])))starts.push(i)});
+ var out=[];
+ starts.forEach(function(s,k){
+  var e=k+1<starts.length?starts[k+1]:rows.length;
+  var B=rows.slice(s,e).map(function(r){return r||[]});
+  out.push(xlParseBlock(B))});
+ return out}
+
+/* ===== Import Excel: rencana impor ===== */
+function xlPad4(n){return('0000'+n).slice(-4)}
+function xlSig(d){return JSON.stringify([d.dt,d.nm,d.pt,d.dr,d.dk,d.sp,d.items])}
+function xlFirst(d){return xlCs(d.items&&d.items[0]&&d.items[0].n).toUpperCase()}
+function xlPlan(list,existing){
+ /* list: [{d:doc,sheet:nama}]  existing: HIST */
+ list=list.map(function(x){return{d:JSON.parse(JSON.stringify(x.d)),sheet:x.sheet}});
+ var R={ok:[],empty:[],nodate:[],dupSame:[],exists:[],renum:0},valid=[];
+ var maxSeq={},exBy={},taken={},runSig={};
+ existing.forEach(function(e){
+  var n=parseInt(e.no,10),p=e.periode;
+  (exBy[p+'|'+n]=exBy[p+'|'+n]||[]).push(e);taken[p+'|'+n]=1;
+  maxSeq[p]=Math.max(maxSeq[p]||0,e.seq||0,n||0)});
+ list.forEach(function(x){
+  var d=x.d;
+  if(!d.items.length){R.empty.push(x);return}
+  if(!d.dt){R.nodate.push(x);return}
+  valid.push(x);
+  var n=/^\d+$/.test(d.no)?parseInt(d.no,10):0,p=d.dt.slice(0,7);
+  if(n>(maxSeq[p]||0))maxSeq[p]=n});
+ valid.forEach(function(x){
+  var d=x.d,p=d.dt.slice(0,7),orig=d.no,n=/^\d+$/.test(orig)?parseInt(orig,10):0,key=p+'|'+n,renum=false;
+  if(n){
+   var ex=exBy[key];
+   if(ex&&ex.some(function(e){return e.dt===d.dt&&xlFirst(e)===xlFirst(d)})){R.exists.push(x);return}
+   if(taken[key]){
+    if(runSig[key]!==undefined&&runSig[key]===xlSig(d)){R.dupSame.push(x);return}
+    renum=true}
+  }else renum=true;
+  if(renum){n=++maxSeq[p];key=p+'|'+n;R.renum++;if(orig)d.no_asal=orig}
+  taken[key]=1;runSig[key]=xlSig(d);
+  d.no=xlPad4(n);
+  R.ok.push({d:d,sheet:x.sheet,periode:p,seq:n})});
+ return R}
+
+/* ===== Import Excel: antarmuka ===== */
+var IMP={list:[],plan:null,busy:false,file:'',sheets:[],cnt:{},sel:{},opt:{printed:true,kembali:false}},IMPORTING=false;
+function loadXlsx(){return new Promise(function(ok,no){
+ if(window.XLSX)return ok();
+ var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+ s.onload=function(){window.XLSX?ok():no(new Error('Pustaka Excel tidak termuat.'))};
+ s.onerror=function(){no(new Error('Gagal memuat pustaka Excel. Cek koneksi internet.'))};
+ document.head.appendChild(s)})}
+function impSet(h){$('#imbody').innerHTML=h}
+function openImp(){
+ if(!isAdmin)return;
+ if(!db){alert('Database belum tersambung.');return}
+ IMP.list=[];IMP.plan=null;IMP.busy=false;impStart();
+ $('#imw').style.display='flex';if(NAV[NAV.length-1]!=='imp')navPush('imp')}
+function closeImp(){
+ if(IMP.busy)return;
+ $('#imw').style.display='none';IMP.list=[];IMP.plan=null;
+ if(NAV[NAV.length-1]==='imp')navClose('imp')}
+function impStart(){
+ impSet('<p class="note" style="margin:0 0 14px">Pilih file Excel surat jalan. Semua sheet dibaca otomatis. Surat yang sudah ada di database tidak akan ditimpa.</p>'+
+  '<label for="imf">File Excel (.xlsx)</label><input id="imf" type="file" accept=".xlsx,.xlsm,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">'+
+  '<div class="msg" id="imst" role="status"></div>'+
+  '<div class="row"><button class="gray" id="imc" type="button">Tutup</button></div>');
+ $('#imc').onclick=closeImp;
+ $('#imf').onchange=function(){if(this.files&&this.files[0])impRead(this.files[0])}}
+function impStat(t,err){var m=$('#imst');if(m){m.textContent=t;m.style.color=err?'#ef4444':'inherit'}}
+async function impRead(file){
+ $('#imf').disabled=true;IMP.busy=true;IMP.file=file.name;
+ try{
+  impStat('Memuat pustaka Excel...');await loadXlsx();
+  impStat('Membaca file...');await sleep(30);
+  var buf=await file.arrayBuffer();
+  var wb=XLSX.read(buf,{type:'array'});buf=null;
+  var names=wb.SheetNames.slice(),list=[];
+  for(var i=0;i<names.length;i++){
+   var nm=names[i],ws=wb.Sheets[nm];
+   impStat('Membaca sheet '+(i+1)+' dari '+names.length+': '+nm.trim()+' ('+list.length+' surat)');
+   await sleep(0);
+   if(ws&&ws['!ref']){
+    var rg=XLSX.utils.decode_range(ws['!ref']);rg.s.r=0;rg.s.c=0;rg.e.c=Math.min(rg.e.c,13);
+    var rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:'',blankrows:true,range:rg});
+    xlParseRows(rows).forEach(function(d){list.push({d:d,sheet:nm.trim()})})}
+   delete wb.Sheets[nm]}
+  wb=null;
+  if(!list.length)throw new Error('Tidak ada surat jalan yang dikenali di file ini.');
+  IMP.list=list;IMP.sheets=[];IMP.cnt={};IMP.sel={};
+  list.forEach(function(x){var k=x.sheet;if(!(k in IMP.cnt)){IMP.cnt[k]=0;IMP.sel[k]=true;IMP.sheets.push(k)}
+   if(x.d.items.length&&x.d.dt)IMP.cnt[k]++});
+  IMP.busy=false;impDraw();
+ }catch(e){IMP.busy=false;var f=$('#imf');if(f){f.disabled=false;f.value=''}impStat('Gagal membaca file: '+((e&&e.message)||e),1)}}
+function impPlan(){
+ var l=IMP.list.filter(function(x){return IMP.sel[x.sheet]});
+ IMP.plan=xlPlan(l,HIST);return IMP.plan}
+function impEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function impDraw(){
+ var R=impPlan(),shs=IMP.sheets,n=R.ok.length;
+ function li(ic,t,v){return '<div style="display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13.5px"><span>'+ic+' '+t+'</span><strong>'+v+'</strong></div>'}
+ var h='<p class="note" style="margin:0 0 10px;word-break:break-all">📄 '+impEsc(IMP.file)+'</p>'+
+  li('✅','Siap diimpor',n)+li('⏭️','Sudah ada di database',R.exists.length)+li('⏭️','Duplikat identik di file',R.dupSame.length)+
+  li('⏭️','Kosong (tanpa barang)',R.empty.length)+li('⏭️','Tanpa tanggal',R.nodate.length);
+ if(R.renum)h+='<p class="note">ℹ️ '+R.renum+' surat memakai nomor yang bentrok / tidak valid di file, jadi diberi nomor lanjutan. Nomor aslinya disimpan dan bisa dicari.</p>';
+ h+='<div style="margin-top:14px"><label>Sheet yang diimpor</label><div style="display:flex;flex-wrap:wrap;gap:6px 16px">';
+ shs.forEach(function(k,i){h+='<label class="imchk"><input type="checkbox" data-s="'+i+'"'+(IMP.sel[k]?' checked':'')+'> '+impEsc(k)+' ('+IMP.cnt[k]+')</label>'});
+ h+='</div></div><div style="margin-top:12px"><label>Status surat yang diimpor</label>'+
+  '<label class="imchk"><input type="checkbox" id="imp1"'+(IMP.opt.printed?' checked':'')+'> Tandai sudah dicetak</label>'+
+  '<label class="imchk"><input type="checkbox" id="imp2"'+(IMP.opt.kembali?' checked':'')+'> Tandai sudah kembali</label></div>'+
+  '<div class="msg" id="imst" role="status"></div>'+
+  '<div class="row"><button class="p" id="imgo" type="button"'+(n?'':' disabled')+'>📥 Import '+n+' surat</button>'+
+  '<button class="gray" id="imre" type="button">Pilih file lain</button><button class="gray" id="imc" type="button">Tutup</button></div>';
+ impSet(h);
+ document.querySelectorAll('#imbody input[data-s]').forEach(function(c){c.onchange=function(){IMP.sel[IMP.sheets[+c.getAttribute('data-s')]]=c.checked;impDraw()}});
+ $('#imp1').onchange=function(){IMP.opt.printed=this.checked};$('#imp2').onchange=function(){IMP.opt.kembali=this.checked};
+ $('#imgo').onclick=impRun;$('#imre').onclick=impStart;$('#imc').onclick=closeImp}
+async function impRun(){
+ var R=IMP.plan;if(!R||!R.ok.length||!db||!isAdmin)return;
+ var chosen=IMP.sheets.filter(function(k){return IMP.sel[k]});
+ if(!confirm('Import '+R.ok.length+' surat jalan dari '+chosen.length+' sheet ke database sekarang?\n\nSheet:\n- '+chosen.join('\n- ')))return;
+ var PR=IMP.opt.printed,KB=IMP.opt.kembali;
+ var rows=R.ok.map(function(x){
+  var ms=Date.parse(x.d.dt+'T05:00:00Z')||Date.now();
+  var r={periode:x.periode,no:x.d.no,seq:x.seq,doc:x.d,created_at:ms,dibaca:true,printed:PR,kembali:KB};
+  if(PR)r.printed_at=ms;if(KB)r.kembali_at=ms;return r});
+ IMP.busy=true;IMPORTING=true;
+ impSet('<p style="margin:0 0 10px;font-weight:700">Mengimpor surat jalan...</p>'+
+  '<div style="height:10px;background:var(--line);border-radius:99px;overflow:hidden"><div id="imbar" style="height:100%;width:0;background:var(--ac);transition:width .2s"></div></div>'+
+  '<div class="msg" id="imst" role="status"></div><p class="note">Jangan tutup halaman ini sampai selesai.</p>');
+ var okN=0,dupN=0,failN=0,firstErr='',CH=200;
+ try{
+  for(var i=0;i<rows.length;i+=CH){
+   var ch=rows.slice(i,i+CH),r=await db.from('suratjalan').insert(ch);
+   if(!r.error)okN+=ch.length;
+   else{
+    for(var j=0;j<ch.length;j++){
+     var r2=await db.from('suratjalan').insert([ch[j]]);
+     if(!r2.error)okN++;
+     else if(r2.error.code==='23505')dupN++;
+     else{failN++;if(!firstErr)firstErr=r2.error.message||String(r2.error)}}}
+   var done=Math.min(rows.length,i+CH);
+   $('#imbar').style.width=(done/rows.length*100)+'%';
+   impStat(done+' dari '+rows.length+' surat diproses')}
+ }catch(e){failN=rows.length-okN-dupN;firstErr=(e&&e.message)||String(e)}
+ IMPORTING=false;IMP.busy=false;
+ try{await loadHist()}catch(e){}
+ impSet('<p style="margin:0 0 10px;font-weight:800;font-size:16px">'+(failN?'⚠️ Selesai dengan kendala':'✅ Import selesai')+'</p>'+
+  '<div style="font-size:13.5px;line-height:1.7">Berhasil diimpor: <strong>'+okN+'</strong> surat'+
+  (dupN?'<br>Dilewati (nomor sudah ada): <strong>'+dupN+'</strong>':'')+
+  (failN?'<br>Gagal: <strong>'+failN+'</strong>'+(firstErr?'<br><span style="color:#ef4444">'+impEsc(firstErr)+'</span>':''):'')+'</div>'+
+  '<div class="row"><button class="p" id="imc" type="button">Tutup</button></div>');
+ $('#imc').onclick=closeImp;IMP.list=[];IMP.plan=null}
+
+/* ===== Ekspor Excel: satu sheet per bulan, berbentuk tabel ===== */
+function loadExcelJS(){return new Promise(function(ok,no){
+ if(window.ExcelJS)return ok();
+ var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
+ s.onload=function(){window.ExcelJS?ok():no(new Error('Pustaka Excel tidak termuat.'))};
+ s.onerror=function(){no(new Error('Gagal memuat pustaka Excel. Cek koneksi internet.'))};
+ document.head.appendChild(s)})}
+var EXP_COLS=[
+ ['No. Surat',12],['Tanggal',12],['Jenis Surat',16],['Pembawa',20],['No. Plat',13],['Dari',20],['Ke',20],['SPK',16],
+ ['Pengawas',18],['Gudang',16],['Piket',16],['Penerima',18],['Barang',38],['Jumlah',10],['Satuan',10],['Keterangan',26],['Dicetak',10],['Kembali',10]];
+function expRows(d){
+ var ym=(d.dt||'').split('-'),tg=ym.length===3?new Date(Date.UTC(+ym[0],+ym[1]-1,+ym[2])):'';
+ var jn=/BANGUNAN/i.test(d.jd||'')?'Bangunan':'Manika';
+ var items=(d.items&&d.items.length)?d.items:[{n:'',q:'',s:'',k:''}];
+ return items.map(function(it){
+  var q=it.q===''||it.q==null?'':(/^\d+([.,]\d+)?$/.test(String(it.q))?Number(String(it.q).replace(',','.')):String(it.q));
+  return [d.no||'',tg,jn,d.nm||'',d.pt||'',d.dr||'',d.dk||'',d.sp||'',d.pw||'',d.gd||'',d.pk||'',d.pn||'',
+   it.n||'',q,it.s||'',it.k||'',d.printed?'Ya':'Tidak',d.kembali?'Ya':'Tidak']})}
+async function expExcel(){
+ if(!isAdmin||!db)return;
+ var h=HIST.filter(function(d){return !FY||d.periode.slice(0,4)===FY});
+ if(!h.length){alert('Tidak ada surat jalan untuk diekspor'+(FY?' pada tahun '+FY:'')+'.');return}
+ var b=$('#expbtn'),old=b.innerHTML;b.disabled=true;b.textContent='⏳ Menyiapkan Excel...';
+ try{
+  await loadExcelJS();
+  var by={};h.forEach(function(d){(by[d.periode]=by[d.periode]||[]).push(d)});
+  var wb=new ExcelJS.Workbook();wb.creator='Surat Jalan';wb.created=new Date();
+  Object.keys(by).sort().forEach(function(p){
+   var docs=by[p].slice().sort(function(a,c){return(a.seq||0)-(c.seq||0)||String(a.no).localeCompare(String(c.no))});
+   var rows=[];docs.forEach(function(d){expRows(d).forEach(function(r){rows.push(r)})});
+   var nm=(BLN[+p.slice(5,7)-1]||p.slice(5,7))+' '+p.slice(0,4);
+   var ws=wb.addWorksheet(nm,{views:[{state:'frozen',ySplit:1}]});
+   ws.addTable({name:'T_'+p.replace('-','_'),ref:'A1',headerRow:true,totalsRow:false,
+    style:{theme:'TableStyleMedium2',showRowStripes:true},
+    columns:EXP_COLS.map(function(c){return{name:c[0],filterButton:true}}),rows:rows});
+   EXP_COLS.forEach(function(c,i){ws.getColumn(i+1).width=c[1]});
+   ws.getColumn(2).numFmt='dd/mm/yyyy';
+   [1,2,3,14,15,17,18].forEach(function(i){ws.getColumn(i).alignment={horizontal:i===14?'right':'center',vertical:'top'}});
+   [13,16].forEach(function(i){ws.getColumn(i).alignment={wrapText:true,vertical:'top'}});
+   ws.getRow(1).alignment={horizontal:'center',vertical:'middle'};ws.getRow(1).height=22});
+  var buf=await wb.xlsx.writeBuffer();
+  var url=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+  var a=document.createElement('a');a.href=url;a.download='surat-jalan-'+(FY||'semua-tahun')+'.xlsx';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url)},10000);
+  toast('Ekspor selesai: '+h.length+' surat, '+Object.keys(by).length+' sheet')
+ }catch(e){alert('Gagal ekspor: '+((e&&e.message)||e))}
+ b.disabled=false;b.innerHTML=old}
+var LIVE_T=null,LIVE_Q=[];
+function liveChange(p){
+ if(IMPORTING)return;
+ if(p.eventType==='INSERT'&&p.new&&!p.new.dibaca)LIVE_Q.push(p.new);
+ clearTimeout(LIVE_T);
+ LIVE_T=setTimeout(function(){loadHist().then(function(){var q=LIVE_Q.splice(0);if(isAdmin)q.forEach(alertNew)}).catch(function(){LIVE_Q=[]})},700)}
+
 var NAV=[],NAVQ=0,NAVAFTER=null,exitT=null;
 function exitMsg(){var m=document.getElementById('exitmsg');if(!m){m=document.createElement('div');m.id='exitmsg';m.style.cssText='display:none;position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 24px);transform:translateX(-50%);background:rgba(15,23,42,.92);color:#fff;padding:10px 18px;border-radius:999px;font-size:13px;font-weight:600;z-index:60;text-align:center;max-width:90%;box-shadow:0 6px 20px rgba(0,0,0,0.25)';document.body.appendChild(m)}return m}
 function navPush(k){
@@ -1388,6 +1691,7 @@ window.addEventListener('popstate',function(){
  var k=NAV.pop();
  if(k==='dlg'){var c=$('#dcn').onclick;if(c)c()}
  else if(k==='np')closeNP()
+ else if(k==='imp'){if(IMP.busy){NAV.push('imp');history.pushState({k:'imp'},'')}else closeImp()}
  else if(k==='edit')showHome()
  else if(k==='home')exitGuard()});
 function showHome(){navClose('edit');$('#home').style.display='';$('#editor').style.display='none';drawHist();window.scrollTo(0,0)}
@@ -1467,7 +1771,7 @@ function drawHist(){
   box.innerHTML='<section style="text-align:center;padding:40px 20px"><p class="note" style="font-size:15px">Belum ada surat jalan tersimpan.</p></section>';
   return;
  }
- if(q.length)h=h.filter(function(d){var s=[d.no,d.pw,d.nm,d.pt,d.sp,d.dr,d.dk,d.dt,fmtDate(d.dt)].concat((d.items||[]).map(function(i){return i.n})).join(' ').toLowerCase();return q.every(function(w){return s.indexOf(w)>-1})});
+ if(q.length)h=h.filter(function(d){var s=[d.no,d.no_asal,d.pw,d.nm,d.pt,d.sp,d.dr,d.dk,d.dt,fmtDate(d.dt)].concat((d.items||[]).map(function(i){return i.n})).join(' ').toLowerCase();return q.every(function(w){return s.indexOf(w)>-1})});
  else h=h.filter(function(d){return (!FY||d.periode.slice(0,4)===FY)&&(!FM||d.periode.slice(5,7)===FM)});
  
  updateStats(h);
@@ -1665,7 +1969,7 @@ $('#l360').onclick=function(){if(!isAdmin)return;save().then(function(ok){if(ok)
  document.getElementById('pgs').textContent='@page{size:A4 portrait;margin:12mm 15mm}@media print{#pr pre{font:11.5pt/14.5pt "Courier New",Courier,monospace;padding-left:0}}';
  window.print();markPrinted()}})};
 $('#save').onclick=function(){save().then(function(ok){if(ok){var n=cur;showHome();toast('Tersimpan: surat jalan no. '+n+'.')}})};
-$('#newbtn').onclick=fresh;$('#back').onclick=showHome;
+$('#newbtn').onclick=fresh;$('#impbtn').onclick=openImp;$('#expbtn').onclick=expExcel;$('#back').onclick=showHome;
 $('#lg').onclick=loginClick;$('#tm').onclick=toggleTheme;
 $('#q').addEventListener('input',function(){HPAGE=1;drawHist()});
 $('#bell').onclick=openNP;$('#npx').onclick=closeNP;
@@ -1692,7 +1996,7 @@ if(!$('#jd').value)$('#jd').value=JD;
  loadHist().then(function(){
   clearTimeout(t);dbState='ok';loadCfg();
   c.channel('sj-live')
-   .on('postgres_changes',{event:'*',schema:'public',table:'suratjalan'},function(p){loadHist().then(function(){if(p.eventType==='INSERT'&&isAdmin&&p.new&&!p.new.dibaca)alertNew(p.new)}).catch(function(){})})
+   .on('postgres_changes',{event:'*',schema:'public',table:'suratjalan'},liveChange)
    .on('postgres_changes',{event:'*',schema:'public',table:'sj_config'},function(){loadCfg()})
    .subscribe();
  }).catch(function(){clearTimeout(t);db=null;dbState='failed';drawHist()});
